@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "motion/react";
 
 // CSS variable references
@@ -9,6 +10,10 @@ const cssVars = {
   markerBorder: "var(--chart-marker-border)",
   markerForeground: "var(--chart-marker-foreground)",
 };
+
+// Fan configuration
+const FAN_RADIUS = 50;
+const FAN_ANGLE = 160; // degrees to spread across
 
 export interface ChartMarker {
   /** Date for this marker (will be matched to nearest data point) */
@@ -38,48 +43,39 @@ export interface MarkerGroupProps {
   size?: number;
   /** Callback when marker group is hovered */
   onHover?: (markers: ChartMarker[] | null) => void;
+  /** Reference to chart container for portal positioning */
+  containerRef?: React.RefObject<HTMLDivElement | null>;
+  /** Margin left offset from chart container */
+  marginLeft?: number;
+  /** Margin top offset from chart container */
+  marginTop?: number;
 }
-
-// Spring config for smooth animations
-const springConfig = {
-  damping: 25,
-  stiffness: 300,
-};
 
 export function MarkerGroup({
   x,
   y,
   markers,
   isActive = false,
-  size = 24,
+  size = 28,
   onHover,
+  containerRef,
+  marginLeft = 0,
+  marginTop = 0,
 }: MarkerGroupProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const shouldFan = isHovered || isActive;
+  const shouldFan = isHovered && markers.length > 1;
   const hasMultiple = markers.length > 1;
 
-  // Calculate fan positions - spread markers in an arc when hovered
-  const getFanPosition = (index: number, total: number) => {
-    if (!shouldFan || total === 1) {
-      // Stacked position - offset vertically
-      return { x: 0, y: index * -4, rotation: 0, scale: 1 };
-    }
-
-    // Fan out in an arc above the base position
-    const spreadAngle = 120; // Total arc spread in degrees
-    const startAngle = -spreadAngle / 2;
-    const angleStep = total > 1 ? spreadAngle / (total - 1) : 0;
+  // Calculate fan position for each marker
+  const getCirclePosition = (index: number, total: number) => {
+    const startAngle = -90 - FAN_ANGLE / 2; // Start from top-left
+    const angleStep = total > 1 ? FAN_ANGLE / (total - 1) : 0;
     const angle = startAngle + index * angleStep;
     const radians = (angle * Math.PI) / 180;
 
-    // Fan radius - how far markers spread from center
-    const radius = size * 1.5;
-
     return {
-      x: Math.sin(radians) * radius,
-      y: -Math.cos(radians) * radius - size / 2,
-      rotation: angle * 0.3, // Slight rotation for visual interest
-      scale: 1.1,
+      x: Math.cos(radians) * FAN_RADIUS,
+      y: Math.sin(radians) * FAN_RADIUS,
     };
   };
 
@@ -93,84 +89,151 @@ export function MarkerGroup({
     onHover?.(null);
   };
 
+  // Calculate absolute position for portal
+  const portalX = x + marginLeft;
+  const portalY = y + marginTop;
+
   return (
-    <g
-      transform={`translate(${x}, ${y})`}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      style={{ cursor: "pointer" }}
-    >
-      {/* Invisible hit area for easier hovering */}
-      <rect
-        x={-size}
-        y={-size * 2}
-        width={size * 2}
-        height={size * 2.5}
-        fill="transparent"
-      />
+    <>
+      {/* SVG anchor point - the main marker circle */}
+      <g
+        transform={`translate(${x}, ${y})`}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        style={{ cursor: "pointer" }}
+      >
+        {/* Invisible hit area for easier hovering */}
+        <rect
+          x={-size}
+          y={-size * 2.5}
+          width={size * 2}
+          height={size * 3}
+          fill="transparent"
+        />
 
-      {/* Render markers - reverse order so first marker is on top when stacked */}
-      {[...markers].reverse().map((marker, reverseIndex) => {
-        const index = markers.length - 1 - reverseIndex;
-        const pos = getFanPosition(index, markers.length);
+        {/* Main stacked marker (always visible) */}
+        <MarkerCircle
+          icon={markers[0]?.icon}
+          size={size}
+          color={markers[0]?.color}
+        />
 
-        return (
-          <motion.g
-            key={`${marker.date.toISOString()}-${index}`}
-            initial={false}
-            animate={{
-              x: pos.x,
-              y: pos.y,
-              rotate: pos.rotation,
-              scale: pos.scale,
-            }}
-            transition={{
-              type: "spring",
-              ...springConfig,
-              delay: shouldFan ? index * 0.03 : (markers.length - 1 - index) * 0.02,
-            }}
-          >
-            <MarkerCircle
-              icon={marker.icon}
-              size={size}
-              color={marker.color}
-              isStacked={hasMultiple && !shouldFan}
-              stackIndex={index}
-            />
-          </motion.g>
-        );
-      })}
-
-      {/* Stack count badge when multiple and not fanned */}
-      <AnimatePresence>
-        {hasMultiple && !shouldFan && (
-          <motion.g
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: "spring", ...springConfig }}
-          >
-            <circle
-              cx={size / 2 + 2}
-              cy={-size / 2 - 2}
-              r={8}
-              fill="var(--chart-line-primary)"
-            />
-            <text
-              x={size / 2 + 2}
-              y={-size / 2 - 2}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={10}
-              fontWeight={600}
-              fill="white"
+        {/* Stack count badge when multiple */}
+        <AnimatePresence>
+          {hasMultiple && !shouldFan && (
+            <motion.g
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 20 }}
             >
-              {markers.length}
-            </text>
-          </motion.g>
+              <circle
+                cx={size / 2 + 2}
+                cy={-size / 2 - 2}
+                r={9}
+                fill="var(--chart-line-primary)"
+              />
+              <text
+                x={size / 2 + 2}
+                y={-size / 2 - 2}
+                textAnchor="middle"
+                dominantBaseline="central"
+                fontSize={11}
+                fontWeight={600}
+                fill="white"
+              >
+                {markers.length}
+              </text>
+            </motion.g>
+          )}
+        </AnimatePresence>
+      </g>
+
+      {/* Portal for fanned circles - escapes SVG clipping */}
+      {containerRef?.current &&
+        createPortal(
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: portalX,
+              top: portalY,
+              zIndex: 100,
+              // Use transform to center the portal origin exactly on the crosshair
+              transform: "translate(0, 0)",
+            }}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          >
+            {/* Fanned circles */}
+            <AnimatePresence>
+              {shouldFan &&
+                markers.map((marker, index) => {
+                  const position = getCirclePosition(index, markers.length);
+                  return (
+                    <motion.div
+                      key={`fan-${marker.date.toISOString()}-${index}`}
+                      className="absolute pointer-events-auto"
+                      style={{
+                        width: size,
+                        height: size,
+                        // Center the circle on the origin point
+                        left: -size / 2,
+                        top: -size / 2,
+                      }}
+                      initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                      animate={{
+                        x: position.x,
+                        y: position.y,
+                        scale: 1,
+                        opacity: 1,
+                      }}
+                      exit={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 400,
+                        damping: 22,
+                        delay: index * 0.04,
+                      }}
+                    >
+                      <MarkerCircleHTML
+                        icon={marker.icon}
+                        size={size}
+                        color={marker.color}
+                      />
+                    </motion.div>
+                  );
+                })}
+            </AnimatePresence>
+
+            {/* Center target circle (visible when fanned) */}
+            <AnimatePresence>
+              {shouldFan && (
+                <motion.div
+                  className="absolute"
+                  style={{
+                    width: size * 0.5,
+                    height: size * 0.5,
+                    left: -size * 0.25,
+                    top: -size * 0.25,
+                  }}
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 0.5 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                >
+                  <div
+                    className="w-full h-full rounded-full"
+                    style={{
+                      backgroundColor: cssVars.markerBorder,
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>,
+          containerRef.current
         )}
-      </AnimatePresence>
-    </g>
+    </>
   );
 }
 
@@ -178,30 +241,14 @@ interface MarkerCircleProps {
   icon: React.ReactNode;
   size: number;
   color?: string;
-  isStacked?: boolean;
-  stackIndex?: number;
 }
 
-function MarkerCircle({
-  icon,
-  size,
-  color,
-  isStacked = false,
-  stackIndex = 0,
-}: MarkerCircleProps) {
-  // Slightly different opacity for stacked markers to show depth
-  const opacity = isStacked ? 1 - stackIndex * 0.15 : 1;
-
+// SVG version for the main stacked marker
+function MarkerCircle({ icon, size, color }: MarkerCircleProps) {
   return (
-    <g style={{ opacity }}>
+    <g>
       {/* Shadow */}
-      <circle
-        cx={0}
-        cy={2}
-        r={size / 2}
-        fill="black"
-        opacity={0.1}
-      />
+      <circle cx={0} cy={2} r={size / 2} fill="black" opacity={0.15} />
       {/* Background */}
       <circle
         cx={0}
@@ -211,7 +258,7 @@ function MarkerCircle({
         stroke={cssVars.markerBorder}
         strokeWidth={1.5}
       />
-      {/* Icon container - using foreignObject for HTML icons */}
+      {/* Icon container */}
       <foreignObject
         x={-size / 2 + 4}
         y={-size / 2 + 4}
@@ -226,12 +273,30 @@ function MarkerCircle({
             alignItems: "center",
             justifyContent: "center",
             color: cssVars.markerForeground,
+            fontSize: size * 0.5,
           }}
         >
           {icon}
         </div>
       </foreignObject>
     </g>
+  );
+}
+
+// HTML version for the fanned markers (rendered via portal)
+function MarkerCircleHTML({ icon, size, color }: MarkerCircleProps) {
+  return (
+    <div
+      className="relative w-full h-full rounded-full flex items-center justify-center shadow-lg"
+      style={{
+        backgroundColor: color || cssVars.markerBackground,
+        border: `1.5px solid ${cssVars.markerBorder}`,
+        fontSize: size * 0.5,
+        color: cssVars.markerForeground,
+      }}
+    >
+      {icon}
+    </div>
   );
 }
 
@@ -254,7 +319,10 @@ export function MarkerTooltipContent({ markers }: MarkerTooltipContentProps) {
               border: `1px solid ${cssVars.markerBorder}`,
             }}
           >
-            <span className="text-xs" style={{ color: cssVars.markerForeground }}>
+            <span
+              className="text-xs"
+              style={{ color: cssVars.markerForeground }}
+            >
               {marker.icon}
             </span>
           </div>
@@ -281,4 +349,3 @@ export function MarkerTooltipContent({ markers }: MarkerTooltipContentProps) {
 }
 
 export default MarkerGroup;
-

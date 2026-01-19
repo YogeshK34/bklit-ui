@@ -300,6 +300,9 @@ function Chart({
     setTooltipData(null);
   }, []);
 
+  // Container ref for marker portals
+  const containerRef = useRef<HTMLDivElement>(null);
+
   // Early return if dimensions not ready (after all hooks)
   if (width < 10 || height < 10) return null;
 
@@ -312,7 +315,7 @@ function Chart({
   const easing = "cubic-bezier(0.85, 0, 0.15, 1)";
 
   return (
-    <div className="relative w-full h-full">
+    <div ref={containerRef} className="relative w-full h-full">
       <svg width={width} height={height}>
         <defs>
           {/* Clip path for grow animation - animates from left to right */}
@@ -561,7 +564,10 @@ function Chart({
                 y={-8} // Position above chart area
                 markers={dateMarkers}
                 isActive={isActive}
-                size={24}
+                size={28}
+                containerRef={containerRef}
+                marginLeft={margin.left}
+                marginTop={margin.top}
               />
             );
           })}
@@ -637,24 +643,65 @@ export default function CurvedLineChart({
     if (propMarkers) return propMarkers;
     // Generate sample markers for demo
     const now = new Date();
+    // Helper to create date at midnight (matches data point dates)
+    const daysAgo = (days: number) => {
+      const date = new Date(now);
+      date.setDate(date.getDate() - days);
+      date.setHours(0, 0, 0, 0);
+      return date;
+    };
+
     const sampleMarkers: ChartMarker[] = [
+      // 5 days ago - multiple events to test fan animation
       {
-        date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // 5 days ago
+        date: daysAgo(5),
         icon: "🚀",
         title: "v1.2.0 Released",
         description: "New chart animations",
       },
       {
-        date: new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000), // Same day - will stack
+        date: daysAgo(5),
         icon: "🐛",
         title: "Bug Fix",
         description: "Fixed tooltip positioning",
       },
       {
-        date: new Date(now.getTime() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+        date: daysAgo(5),
+        icon: "📦",
+        title: "Dependency Update",
+        description: "Updated motion to v12",
+      },
+      {
+        date: daysAgo(5),
+        icon: "🔒",
+        title: "Security Patch",
+        description: "CVE-2025-1234 fixed",
+      },
+      {
+        date: daysAgo(5),
+        icon: "⚡",
+        title: "Performance",
+        description: "50% faster renders",
+      },
+      // 12 days ago - single marker
+      {
+        date: daysAgo(12),
         icon: "✨",
         title: "Feature Launch",
         description: "Added grid support",
+      },
+      // 20 days ago - pair of markers
+      {
+        date: daysAgo(20),
+        icon: "🎨",
+        title: "Design Update",
+        description: "New color system",
+      },
+      {
+        date: daysAgo(20),
+        icon: "📝",
+        title: "Docs Updated",
+        description: "Added examples",
       },
     ];
     return sampleMarkers;
