@@ -52,36 +52,25 @@ function generateData(): DataPoint[] {
 const getDate = (d: DataPoint) => d.date;
 const bisectDate = bisector<DataPoint, Date>((d: DataPoint) => d.date).left;
 
-// Theme colors
-const colors = {
-  light: {
-    foreground: "#18181b",
-    background: "#ffffff",
-    mutedForeground: "#71717a",
-  },
-  dark: {
-    foreground: "#fafafa",
-    background: "#09090b",
-    mutedForeground: "#a1a1aa",
-  },
+// CSS variable references for theming
+const cssVars = {
+  background: "var(--chart-background)",
+  foreground: "var(--chart-foreground)",
+  foregroundMuted: "var(--chart-foreground-muted)",
+  linePrimary: "var(--chart-line-primary)",
+  lineSecondary: "var(--chart-line-secondary)",
+  crosshair: "var(--chart-crosshair)",
 };
 
 interface ChartProps {
   width: number;
   height: number;
   data: DataPoint[];
-  isDark?: boolean;
   animationDuration?: number;
 }
 
-function Chart({
-  width,
-  height,
-  data,
-  isDark = false,
-  animationDuration = 1100,
-}: ChartProps) {
-  const theme = isDark ? colors.dark : colors.light;
+function Chart({ width, height, data, animationDuration = 1100 }: ChartProps) {
+  // Theme colors come from CSS variables
 
   const [tooltipData, setTooltipData] = useState<{
     point: DataPoint;
@@ -300,59 +289,107 @@ function Chart({
             />
           </clipPath>
 
-          {/* Users line gradient - fades at edges */}
+          {/* Primary line gradient - fades at edges */}
           <linearGradient
-            id="users-line-gradient"
+            id="line-primary-gradient"
             x1="0%"
             y1="0%"
             x2="100%"
             y2="0%"
           >
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-            <stop offset="15%" stopColor="#3b82f6" stopOpacity="1" />
-            <stop offset="85%" stopColor="#3b82f6" stopOpacity="1" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop
+              offset="0%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 0 }}
+            />
+            <stop
+              offset="15%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 1 }}
+            />
+            <stop
+              offset="85%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 1 }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 0 }}
+            />
           </linearGradient>
 
-          {/* Pageviews line gradient - fades at edges */}
+          {/* Secondary line gradient - fades at edges */}
           <linearGradient
-            id="pageviews-line-gradient"
+            id="line-secondary-gradient"
             x1="0%"
             y1="0%"
             x2="100%"
             y2="0%"
           >
-            <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0" />
-            <stop offset="15%" stopColor="#a1a1aa" stopOpacity="1" />
-            <stop offset="85%" stopColor="#a1a1aa" stopOpacity="1" />
-            <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
+            <stop
+              offset="0%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 0 }}
+            />
+            <stop
+              offset="15%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 1 }}
+            />
+            <stop
+              offset="85%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 1 }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 0 }}
+            />
           </linearGradient>
 
           {/* Dimmed gradients for hover state */}
           <linearGradient
-            id="users-line-gradient-dim"
+            id="line-primary-gradient-dim"
             x1="0%"
             y1="0%"
             x2="100%"
             y2="0%"
           >
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-            <stop offset="15%" stopColor="#3b82f6" stopOpacity="0.3" />
-            <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop
+              offset="0%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 0 }}
+            />
+            <stop
+              offset="15%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 0.3 }}
+            />
+            <stop
+              offset="85%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 0.3 }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: cssVars.linePrimary, stopOpacity: 0 }}
+            />
           </linearGradient>
 
           <linearGradient
-            id="pageviews-line-gradient-dim"
+            id="line-secondary-gradient-dim"
             x1="0%"
             y1="0%"
             x2="100%"
             y2="0%"
           >
-            <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0" />
-            <stop offset="15%" stopColor="#a1a1aa" stopOpacity="0.3" />
-            <stop offset="85%" stopColor="#a1a1aa" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
+            <stop
+              offset="0%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 0 }}
+            />
+            <stop
+              offset="15%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 0.3 }}
+            />
+            <stop
+              offset="85%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 0.3 }}
+            />
+            <stop
+              offset="100%"
+              style={{ stopColor: cssVars.lineSecondary, stopOpacity: 0 }}
+            />
           </linearGradient>
         </defs>
 
@@ -369,8 +406,8 @@ function Chart({
               y={(d) => yScalePageviews(d.pageviews) ?? 0}
               stroke={
                 isHovering
-                  ? "url(#pageviews-line-gradient-dim)"
-                  : "url(#pageviews-line-gradient)"
+                  ? "url(#line-secondary-gradient-dim)"
+                  : "url(#line-secondary-gradient)"
               }
               strokeWidth={2.5}
               strokeLinecap="round"
@@ -386,8 +423,8 @@ function Chart({
               y={(d) => yScaleUsers(d.uniqueUsers) ?? 0}
               stroke={
                 isHovering
-                  ? "url(#users-line-gradient-dim)"
-                  : "url(#users-line-gradient)"
+                  ? "url(#line-primary-gradient-dim)"
+                  : "url(#line-primary-gradient)"
               }
               strokeWidth={2.5}
               strokeLinecap="round"
@@ -403,7 +440,7 @@ function Chart({
                 data={data}
                 x={(d) => xScale(getDate(d)) ?? 0}
                 y={(d) => yScalePageviews(d.pageviews) ?? 0}
-                stroke="#a1a1aa"
+                stroke={cssVars.lineSecondary}
                 strokeWidth={2.5}
                 strokeLinecap="round"
                 curve={curveNatural}
@@ -415,7 +452,7 @@ function Chart({
                 data={data}
                 x={(d) => xScale(getDate(d)) ?? 0}
                 y={(d) => yScaleUsers(d.uniqueUsers) ?? 0}
-                stroke="#3b82f6"
+                stroke={cssVars.linePrimary}
                 strokeWidth={2.5}
                 strokeLinecap="round"
                 curve={curveNatural}
@@ -431,21 +468,21 @@ function Chart({
             x={tooltipData?.x ?? 0}
             height={innerHeight}
             visible={!!tooltipData}
-            color={theme.foreground}
+            color={cssVars.crosshair}
           />
           <TooltipDot
             x={tooltipData?.x ?? 0}
             y={tooltipData?.yUsers ?? 0}
             visible={!!tooltipData}
-            color="#3b82f6"
-            strokeColor={theme.background}
+            color={cssVars.linePrimary}
+            strokeColor={cssVars.background}
           />
           <TooltipDot
             x={tooltipData?.x ?? 0}
             y={tooltipData?.yPageviews ?? 0}
             visible={!!tooltipData}
-            color="#a1a1aa"
-            strokeColor={theme.background}
+            color={cssVars.lineSecondary}
+            strokeColor={cssVars.background}
           />
 
           {/* Invisible overlay for mouse events - only active after animation completes */}
@@ -483,34 +520,15 @@ function Chart({
 // Prepare tooltip rows from data point
 function getTooltipRows(point: DataPoint): TooltipRow[] {
   return [
-    { color: "#3b82f6", label: "People", value: point.uniqueUsers },
-    { color: "#a1a1aa", label: "Views", value: point.pageviews },
+    { color: cssVars.linePrimary, label: "People", value: point.uniqueUsers },
+    { color: cssVars.lineSecondary, label: "Views", value: point.pageviews },
   ];
 }
 
 export default function CurvedLineChart() {
   const data = useMemo(() => generateData(), []);
-  const [isDark, setIsDark] = useState(false);
   const [animationDuration, setAnimationDuration] = useState(1500);
   const [chartKey, setChartKey] = useState(0);
-
-  // Detect dark mode from document
-  useEffect(() => {
-    const checkDarkMode = () => {
-      setIsDark(document.documentElement.classList.contains("dark"));
-    };
-
-    checkDarkMode();
-
-    // Watch for theme changes
-    const observer = new MutationObserver(checkDarkMode);
-    observer.observe(document.documentElement, {
-      attributes: true,
-      attributeFilter: ["class"],
-    });
-
-    return () => observer.disconnect();
-  }, []);
 
   const handleReplay = () => {
     setChartKey((prev) => prev + 1);
@@ -534,7 +552,6 @@ export default function CurvedLineChart() {
                 width={width}
                 height={height}
                 data={data}
-                isDark={isDark}
                 animationDuration={animationDuration}
               />
             )}

@@ -124,9 +124,9 @@ export function ChartTooltip({
         exit={{ opacity: 0, scale: 0.95 }}
         transition={{ duration: 0.15 }}
       >
-        <div className="bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 rounded-lg shadow-lg px-3 py-2.5 min-w-[140px]">
+        <div className="bg-zinc-900/30 backdrop-blur-md text-white rounded-lg shadow-lg px-3 py-2.5 min-w-[140px]">
           {title && (
-            <div className="text-xs font-medium text-zinc-400 dark:text-zinc-500 mb-2">
+            <div className="text-xs font-medium text-zinc-400 mb-2">
               {title}
             </div>
           )}
@@ -141,11 +141,9 @@ export function ChartTooltip({
                     className="w-2.5 h-2.5 rounded-full shrink-0"
                     style={{ backgroundColor: row.color }}
                   />
-                  <span className="text-sm text-zinc-100 dark:text-zinc-800">
-                    {row.label}
-                  </span>
+                  <span className="text-sm text-zinc-100">{row.label}</span>
                 </div>
-                <span className="text-sm font-medium text-white dark:text-zinc-900 tabular-nums">
+                <span className="text-sm font-medium text-white tabular-nums">
                   {typeof row.value === "number"
                     ? row.value.toLocaleString()
                     : row.value}

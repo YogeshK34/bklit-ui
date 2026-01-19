@@ -16,6 +16,24 @@
   --fd-accent-foreground: 0 0% 98%;
   --fd-border: 240 4% 16%;
   --fd-ring: 250 100% 70%;
+
+  /* Chart component semantic colors - OKLCH format */
+  /* Base colors */
+  --chart-background: oklch(0.145 0 0);
+  --chart-foreground: oklch(0.45 0 0);
+  --chart-foreground-muted: oklch(0.65 0.01 260);
+  
+  /* Line colors */
+  --chart-line-primary: oklch(0.623 0.214 255);
+  --chart-line-secondary: oklch(0.705 0.015 265);
+  
+  /* Crosshair/indicator */
+  --chart-crosshair: oklch(0.45 0 0);
+  
+  /* Tooltip */
+  --chart-tooltip-background: oklch(0.21 0.006 285 / 0.8);
+  --chart-tooltip-foreground: oklch(0.985 0 0);
+  --chart-tooltip-muted: oklch(0.65 0.01 260);
 }
 
 .light {
@@ -29,6 +47,23 @@
   --fd-accent-foreground: 240 6% 10%;
   --fd-border: 240 6% 90%;
   --fd-ring: 250 100% 55%;
+
+  /* Chart component semantic colors - light mode */
+  --chart-background: oklch(1 0 0);
+  --chart-foreground: oklch(0.145 0.004 285);
+  --chart-foreground-muted: oklch(0.55 0.014 260);
+  
+  /* Line colors (same in both modes for consistency) */
+  --chart-line-primary: oklch(0.623 0.214 255);
+  --chart-line-secondary: oklch(0.705 0.015 265);
+  
+  /* Crosshair/indicator */
+  --chart-crosshair: oklch(0.145 0.004 285);
+  
+  /* Tooltip */
+  --chart-tooltip-background: oklch(0.21 0.006 285 / 0.8);
+  --chart-tooltip-foreground: oklch(0.985 0 0);
+  --chart-tooltip-muted: oklch(0.65 0.01 260);
 }
 
 /* Component preview styles */
