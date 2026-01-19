@@ -1,6 +1,9 @@
-@import 'tailwindcss';
-@import 'fumadocs-ui/css/neutral.css';
-@import 'fumadocs-ui/css/preset.css';
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+/* Include UI package in Tailwind's content scanning */
+@source '../../../packages/ui/src/**/*.tsx';
 
 :root {
   --fd-background: 0 0% 4%;
@@ -36,4 +39,3 @@
 .component-preview-dark {
   @apply bg-fd-background;
 }
-

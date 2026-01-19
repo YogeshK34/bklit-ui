@@ -8,6 +8,7 @@
     "./card": "./src/card.tsx",
     "./code": "./src/code.tsx",
     "./line-chart": "./src/line-chart.tsx",
+    "./tooltip": "./src/tooltip.tsx",
     "./*": "./src/*.tsx"
   },
   "scripts": {

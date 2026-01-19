@@ -7,9 +7,14 @@ import { curveNatural } from "@visx/curve";
 import { scaleTime, scaleLinear } from "@visx/scale";
 import { ParentSize } from "@visx/responsive";
 import { localPoint } from "@visx/event";
-import { motion, useSpring, useTransform } from "motion/react";
 // @ts-expect-error - d3-array types not installed
 import { bisector } from "d3-array";
+import {
+  ChartTooltip,
+  TooltipDot,
+  TooltipIndicator,
+  type TooltipRow,
+} from "./tooltip";
 
 interface DataPoint {
   date: Date;
@@ -61,17 +66,21 @@ const colors = {
   },
 };
 
-// Spring config for tooltip animations
-const tooltipSpringConfig = { stiffness: 400, damping: 35 };
-
 interface ChartProps {
   width: number;
   height: number;
   data: DataPoint[];
   isDark?: boolean;
+  animationDuration?: number;
 }
 
-function Chart({ width, height, data, isDark = false }: ChartProps) {
+function Chart({
+  width,
+  height,
+  data,
+  isDark = false,
+  animationDuration = 1100,
+}: ChartProps) {
   const theme = isDark ? colors.dark : colors.light;
 
   const [tooltipData, setTooltipData] = useState<{
@@ -86,18 +95,8 @@ function Chart({ width, height, data, isDark = false }: ChartProps) {
   const usersPathRef = useRef<SVGPathElement>(null);
   const pageviewsPathRef = useRef<SVGPathElement>(null);
   const [pathLengths, setPathLengths] = useState({ users: 0, pageviews: 0 });
-  const [isAnimated, setIsAnimated] = useState(false);
-
-  // Animated tooltip position
-  const tooltipX = useSpring(0, tooltipSpringConfig);
-  const tooltipYUsers = useSpring(0, tooltipSpringConfig);
-  const tooltipYPageviews = useSpring(0, tooltipSpringConfig);
-
-  // Tooltip position transforms
-  const datePillTranslate = useTransform(tooltipX, (x) => x + 40);
-  const tooltipBoxTranslate = useTransform(tooltipX, (x) =>
-    x + 40 > width - 150 ? x + 40 - 140 : x + 40 + 14
-  );
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [clipWidth, setClipWidth] = useState(0);
 
   const margin = { top: 40, right: 40, bottom: 40, left: 40 };
   const innerWidth = width - margin.left - margin.right;
@@ -135,34 +134,44 @@ function Chart({ width, height, data, isDark = false }: ChartProps) {
     [innerHeight, data]
   );
 
-  // Measure path lengths after render and trigger animation
+  // Pre-compute all date labels for the ticker animation
+  const dateLabels = useMemo(
+    () =>
+      data.map((d) =>
+        d.date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        })
+      ),
+    [data]
+  );
+
+  // Measure path lengths after render and trigger grow animation
   useEffect(() => {
     if (usersPathRef.current && pageviewsPathRef.current) {
       const usersLen = usersPathRef.current.getTotalLength();
       const pageviewsLen = pageviewsPathRef.current.getTotalLength();
-      setPathLengths({
-        users: usersLen,
-        pageviews: pageviewsLen,
-      });
 
-      // Trigger draw animation after path lengths are measured
-      if (!isAnimated && usersLen > 0) {
-        // Small delay to ensure initial state is set
-        requestAnimationFrame(() => {
-          setIsAnimated(true);
+      if (usersLen > 0 && pageviewsLen > 0) {
+        setPathLengths({
+          users: usersLen,
+          pageviews: pageviewsLen,
         });
+
+        // Trigger the grow animation: clipWidth goes from 0 to innerWidth
+        if (!isLoaded) {
+          // Start with clip at 0, then animate to full width
+          requestAnimationFrame(() => {
+            setClipWidth(innerWidth);
+            // Mark as loaded after animation completes
+            setTimeout(() => {
+              setIsLoaded(true);
+            }, animationDuration);
+          });
+        }
       }
     }
-  }, [width, height, data, isAnimated]);
-
-  // Update animated tooltip position when tooltip data changes
-  useEffect(() => {
-    if (tooltipData) {
-      tooltipX.set(tooltipData.x);
-      tooltipYUsers.set(tooltipData.yUsers);
-      tooltipYPageviews.set(tooltipData.yPageviews);
-    }
-  }, [tooltipData, tooltipX, tooltipYUsers, tooltipYPageviews]);
+  }, [width, height, data, isLoaded, innerWidth, animationDuration]);
 
   // Calculate dash offset/array for highlighting a segment using binary search
   const getDashProps = useCallback(
@@ -260,292 +269,230 @@ function Chart({ width, height, data, isDark = false }: ChartProps) {
     setTooltipData(null);
   }, []);
 
+  // Early return if dimensions not ready (after all hooks)
+  if (width < 10 || height < 10) return null;
+
   const isHovering = tooltipData !== null;
 
-  if (width < 10) return null;
+  // Block interactivity until animation is complete
+  const canInteract = isLoaded;
 
-  // CSS spring animation for draw effect (using linear() easing from Motion MCP)
-  const drawAnimationStyle = {
-    transition: isAnimated
-      ? "stroke-dashoffset 1100ms linear(0, 0.4519, 1.2082, 1.5266, 1.2911, 0.8924, 0.7227, 0.8454, 1.0556, 1.146, 1.0821, 0.9713, 0.9231, 0.9564, 1.0148, 1.0405, 1.0231, 0.9923, 0.9787, 0.9877, 1.0039, 1.0112, 1.0065, 0.998, 0.9941, 0.9965, 1.001, 1.0031, 1.0018, 0.9995, 1, 0.999, 1.0003, 1, 1.0005, 0.9999, 1)"
-      : "none",
-  };
+  // Easing for clip path animation - easeInOutCirc gives smooth acceleration/deceleration
+  const easing = "cubic-bezier(0.85, 0, 0.15, 1)";
 
   return (
-    <svg width={width} height={height}>
-      <defs>
-        {/* Users line gradient - fades at edges */}
-        <linearGradient
-          id="users-line-gradient"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-          <stop offset="15%" stopColor="#3b82f6" stopOpacity="1" />
-          <stop offset="85%" stopColor="#3b82f6" stopOpacity="1" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-        </linearGradient>
+    <div className="relative w-full h-full">
+      <svg width={width} height={height}>
+        <defs>
+          {/* Clip path for grow animation - animates from left to right */}
+          <clipPath id="grow-clip">
+            <rect
+              x={0}
+              y={0}
+              width={isLoaded ? innerWidth : clipWidth}
+              height={innerHeight + 20}
+              style={{
+                transition:
+                  !isLoaded && clipWidth > 0
+                    ? `width ${animationDuration}ms ${easing}`
+                    : "none",
+              }}
+            />
+          </clipPath>
 
-        {/* Pageviews line gradient - fades at edges */}
-        <linearGradient
-          id="pageviews-line-gradient"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
-          <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0" />
-          <stop offset="15%" stopColor="#a1a1aa" stopOpacity="1" />
-          <stop offset="85%" stopColor="#a1a1aa" stopOpacity="1" />
-          <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
-        </linearGradient>
+          {/* Users line gradient - fades at edges */}
+          <linearGradient
+            id="users-line-gradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="15%" stopColor="#3b82f6" stopOpacity="1" />
+            <stop offset="85%" stopColor="#3b82f6" stopOpacity="1" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
 
-        {/* Dimmed gradients for hover state */}
-        <linearGradient
-          id="users-line-gradient-dim"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
-          <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-          <stop offset="15%" stopColor="#3b82f6" stopOpacity="0.3" />
-          <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-        </linearGradient>
+          {/* Pageviews line gradient - fades at edges */}
+          <linearGradient
+            id="pageviews-line-gradient"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
+            <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0" />
+            <stop offset="15%" stopColor="#a1a1aa" stopOpacity="1" />
+            <stop offset="85%" stopColor="#a1a1aa" stopOpacity="1" />
+            <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
+          </linearGradient>
 
-        <linearGradient
-          id="pageviews-line-gradient-dim"
-          x1="0%"
-          y1="0%"
-          x2="100%"
-          y2="0%"
-        >
-          <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0" />
-          <stop offset="15%" stopColor="#a1a1aa" stopOpacity="0.3" />
-          <stop offset="85%" stopColor="#a1a1aa" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
-        </linearGradient>
-      </defs>
+          {/* Dimmed gradients for hover state */}
+          <linearGradient
+            id="users-line-gradient-dim"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+            <stop offset="15%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="85%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </linearGradient>
 
-      <rect x={0} y={0} width={width} height={height} fill="transparent" />
+          <linearGradient
+            id="pageviews-line-gradient-dim"
+            x1="0%"
+            y1="0%"
+            x2="100%"
+            y2="0%"
+          >
+            <stop offset="0%" stopColor="#a1a1aa" stopOpacity="0" />
+            <stop offset="15%" stopColor="#a1a1aa" stopOpacity="0.3" />
+            <stop offset="85%" stopColor="#a1a1aa" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#a1a1aa" stopOpacity="0" />
+          </linearGradient>
+        </defs>
 
-      <g transform={`translate(${margin.left},${margin.top})`}>
-        {/* Pageviews base line with draw animation */}
-        <LinePath
-          innerRef={pageviewsPathRef}
-          data={data}
-          x={(d) => xScale(getDate(d)) ?? 0}
-          y={(d) => yScalePageviews(d.pageviews) ?? 0}
-          stroke={
-            isHovering
-              ? "url(#pageviews-line-gradient-dim)"
-              : "url(#pageviews-line-gradient)"
-          }
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          curve={curveNatural}
-          strokeDasharray={pathLengths.pageviews || undefined}
-          strokeDashoffset={isAnimated ? 0 : pathLengths.pageviews}
-          style={{
-            ...drawAnimationStyle,
-          }}
-        />
+        <rect x={0} y={0} width={width} height={height} fill="transparent" />
 
-        {/* Users base line with draw animation */}
-        <LinePath
-          innerRef={usersPathRef}
-          data={data}
-          x={(d) => xScale(getDate(d)) ?? 0}
-          y={(d) => yScaleUsers(d.uniqueUsers) ?? 0}
-          stroke={
-            isHovering
-              ? "url(#users-line-gradient-dim)"
-              : "url(#users-line-gradient)"
-          }
-          strokeWidth={2.5}
-          strokeLinecap="round"
-          curve={curveNatural}
-          strokeDasharray={pathLengths.users || undefined}
-          strokeDashoffset={isAnimated ? 0 : pathLengths.users}
-          style={{
-            ...drawAnimationStyle,
-          }}
-        />
-
-        {/* Highlighted segment using stroke-dasharray */}
-        {isHovering && (
-          <>
+        <g transform={`translate(${margin.left},${margin.top})`}>
+          {/* Lines group with clip path for grow animation */}
+          <g clipPath="url(#grow-clip)">
+            {/* Pageviews base line */}
             <LinePath
+              innerRef={pageviewsPathRef}
               data={data}
               x={(d) => xScale(getDate(d)) ?? 0}
               y={(d) => yScalePageviews(d.pageviews) ?? 0}
-              stroke="#a1a1aa"
+              stroke={
+                isHovering
+                  ? "url(#pageviews-line-gradient-dim)"
+                  : "url(#pageviews-line-gradient)"
+              }
               strokeWidth={2.5}
               strokeLinecap="round"
               curve={curveNatural}
-              strokeDasharray={pageviewsDashProps.strokeDasharray}
-              strokeDashoffset={pageviewsDashProps.strokeDashoffset}
-              style={{ transition: "stroke-dashoffset 0.1s ease-out" }}
+              style={{ transition: "stroke 0.15s ease" }}
             />
+
+            {/* Users base line */}
             <LinePath
+              innerRef={usersPathRef}
               data={data}
               x={(d) => xScale(getDate(d)) ?? 0}
               y={(d) => yScaleUsers(d.uniqueUsers) ?? 0}
-              stroke="#3b82f6"
+              stroke={
+                isHovering
+                  ? "url(#users-line-gradient-dim)"
+                  : "url(#users-line-gradient)"
+              }
               strokeWidth={2.5}
               strokeLinecap="round"
               curve={curveNatural}
-              strokeDasharray={usersDashProps.strokeDasharray}
-              strokeDashoffset={usersDashProps.strokeDashoffset}
-              style={{ transition: "stroke-dashoffset 0.1s ease-out" }}
+              style={{ transition: "stroke 0.15s ease" }}
             />
-          </>
-        )}
+          </g>
 
-        {/* Animated hover vertical line and dots */}
-        {tooltipData && (
-          <>
-            <motion.line
-              x1={tooltipX}
-              y1={0}
-              x2={tooltipX}
-              y2={innerHeight}
-              stroke={theme.foreground}
-              strokeWidth={1}
-            />
-            {/* Users dot */}
-            <motion.circle
-              cx={tooltipX}
-              cy={tooltipYUsers}
-              r={5}
-              fill="#3b82f6"
-              stroke={theme.background}
-              strokeWidth={2}
-            />
-            {/* Pageviews dot */}
-            <motion.circle
-              cx={tooltipX}
-              cy={tooltipYPageviews}
-              r={5}
-              fill="#a1a1aa"
-              stroke={theme.background}
-              strokeWidth={2}
-            />
-          </>
-        )}
+          {/* Highlighted segment using stroke-dasharray - only after animation completes */}
+          {canInteract && isHovering && (
+            <>
+              <LinePath
+                data={data}
+                x={(d) => xScale(getDate(d)) ?? 0}
+                y={(d) => yScalePageviews(d.pageviews) ?? 0}
+                stroke="#a1a1aa"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                curve={curveNatural}
+                strokeDasharray={pageviewsDashProps.strokeDasharray}
+                strokeDashoffset={pageviewsDashProps.strokeDashoffset}
+                style={{ transition: "stroke-dashoffset 0.1s ease-out" }}
+              />
+              <LinePath
+                data={data}
+                x={(d) => xScale(getDate(d)) ?? 0}
+                y={(d) => yScaleUsers(d.uniqueUsers) ?? 0}
+                stroke="#3b82f6"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                curve={curveNatural}
+                strokeDasharray={usersDashProps.strokeDasharray}
+                strokeDashoffset={usersDashProps.strokeDashoffset}
+                style={{ transition: "stroke-dashoffset 0.1s ease-out" }}
+              />
+            </>
+          )}
 
-        {/* Invisible overlay for mouse events */}
-        <rect
-          x={0}
-          y={0}
-          width={innerWidth}
-          height={innerHeight}
-          fill="transparent"
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-        />
-      </g>
-
-      {/* Animated date pill at bottom */}
-      {tooltipData && (
-        <motion.g
-          style={{ translateX: datePillTranslate, translateY: height - 12 }}
-        >
-          <rect
-            x={-32}
-            y={-10}
-            width={64}
-            height={20}
-            rx={10}
-            fill={theme.foreground}
+          {/* Animated hover vertical line and dots */}
+          <TooltipIndicator
+            x={tooltipData?.x ?? 0}
+            height={innerHeight}
+            visible={!!tooltipData}
+            color={theme.foreground}
           />
-          <text
-            x={0}
-            y={4}
-            textAnchor="middle"
-            fontSize={11}
-            fontWeight={500}
-            fill={theme.background}
-          >
-            {tooltipData.point.date.toLocaleDateString("en-US", {
-              month: "short",
-              day: "numeric",
-            })}
-          </text>
-        </motion.g>
-      )}
+          <TooltipDot
+            x={tooltipData?.x ?? 0}
+            y={tooltipData?.yUsers ?? 0}
+            visible={!!tooltipData}
+            color="#3b82f6"
+            strokeColor={theme.background}
+          />
+          <TooltipDot
+            x={tooltipData?.x ?? 0}
+            y={tooltipData?.yPageviews ?? 0}
+            visible={!!tooltipData}
+            color="#a1a1aa"
+            strokeColor={theme.background}
+          />
 
-      {/* Animated tooltip */}
-      {tooltipData && (
-        <motion.g
-          style={{ translateX: tooltipBoxTranslate, translateY: margin.top }}
-        >
-          <motion.rect
+          {/* Invisible overlay for mouse events - only active after animation completes */}
+          <rect
             x={0}
             y={0}
-            width={126}
-            height={72}
-            rx={8}
-            fill={theme.foreground}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.15 }}
+            width={innerWidth}
+            height={innerHeight}
+            fill="transparent"
+            style={{ cursor: canInteract ? "crosshair" : "default" }}
+            onMouseMove={canInteract ? handleMouseMove : undefined}
+            onMouseLeave={canInteract ? handleMouseLeave : undefined}
           />
-          <text
-            x={12}
-            y={22}
-            fontSize={12}
-            fontWeight={500}
-            fill={theme.mutedForeground}
-          >
-            {tooltipData.point.date.toLocaleDateString("en-US", {
-              weekday: "short",
-              month: "short",
-              day: "numeric",
-            })}
-          </text>
-          <g transform="translate(12, 40)">
-            <circle cx={5} cy={0} r={5} fill="#3b82f6" />
-            <text x={16} y={4} fontSize={13} fill={theme.background}>
-              People
-            </text>
-            <text
-              x={114}
-              y={4}
-              fontSize={13}
-              fill={theme.background}
-              textAnchor="end"
-            >
-              {tooltipData.point.uniqueUsers.toLocaleString()}
-            </text>
-          </g>
-          <g transform="translate(12, 58)">
-            <circle cx={5} cy={0} r={5} fill="#a1a1aa" />
-            <text x={16} y={4} fontSize={13} fill={theme.background}>
-              Views
-            </text>
-            <text
-              x={114}
-              y={4}
-              fontSize={13}
-              fill={theme.background}
-              textAnchor="end"
-            >
-              {tooltipData.point.pageviews.toLocaleString()}
-            </text>
-          </g>
-        </motion.g>
-      )}
-    </svg>
+        </g>
+      </svg>
+
+      {/* HTML Tooltip - positioned with actual pixel coordinates */}
+      <ChartTooltip
+        x={(tooltipData?.x ?? 0) + margin.left}
+        visible={!!tooltipData}
+        title={tooltipData?.point.date.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })}
+        rows={tooltipData ? getTooltipRows(tooltipData.point) : []}
+        containerWidth={width}
+        currentIndex={tooltipData?.index ?? 0}
+        dateLabels={dateLabels}
+      />
+    </div>
   );
+}
+
+// Prepare tooltip rows from data point
+function getTooltipRows(point: DataPoint): TooltipRow[] {
+  return [
+    { color: "#3b82f6", label: "People", value: point.uniqueUsers },
+    { color: "#a1a1aa", label: "Views", value: point.pageviews },
+  ];
 }
 
 export default function CurvedLineChart() {
   const data = useMemo(() => generateData(), []);
   const [isDark, setIsDark] = useState(false);
+  const [animationDuration, setAnimationDuration] = useState(1500);
+  const [chartKey, setChartKey] = useState(0);
 
   // Detect dark mode from document
   useEffect(() => {
@@ -565,37 +512,52 @@ export default function CurvedLineChart() {
     return () => observer.disconnect();
   }, []);
 
+  const handleReplay = () => {
+    setChartKey((prev) => prev + 1);
+  };
+
   return (
-    <div
-      className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4"
-      style={{ height: 400 }}
-    >
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-            Last 30 Days
-          </h3>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Traffic overview
-          </p>
-        </div>
-        <div className="flex items-center gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-blue-500" />
-            <span className="text-zinc-500 dark:text-zinc-400">People</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-zinc-400" />
-            <span className="text-zinc-500 dark:text-zinc-400">Views</span>
-          </div>
+    <div className="w-full">
+      <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
+        <button
+          onClick={handleReplay}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+        >
+          Replay Animation
+        </button>
+
+        {/* Responsive chart container - ParentSize handles resize detection */}
+        <div key={chartKey} className="w-full" style={{ aspectRatio: "2 / 1" }}>
+          <ParentSize debounceTime={10}>
+            {({ width, height }) => (
+              <Chart
+                width={width}
+                height={height}
+                data={data}
+                isDark={isDark}
+                animationDuration={animationDuration}
+              />
+            )}
+          </ParentSize>
         </div>
       </div>
-      <div style={{ height: 320 }}>
-        <ParentSize>
-          {({ width, height }) => (
-            <Chart width={width} height={height} data={data} isDark={isDark} />
-          )}
-        </ParentSize>
+
+      {/* Animation Controls */}
+      <div className="mt-4 flex items-center gap-4 p-4 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900">
+        <div className="flex items-center gap-3 flex-1">
+          <label className="text-sm font-medium text-zinc-700 dark:text-zinc-300 whitespace-nowrap">
+            Duration: {animationDuration}ms
+          </label>
+          <input
+            type="range"
+            min={200}
+            max={8000}
+            step={100}
+            value={animationDuration}
+            onChange={(e) => setAnimationDuration(Number(e.target.value))}
+            className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
+        </div>
       </div>
     </div>
   );
