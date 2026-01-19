@@ -174,37 +174,125 @@ export function ChartTooltip({
   );
 }
 
-// SVG Vertical line indicator
+// SVG Vertical indicator with gradient - supports variable width
+export type IndicatorWidth =
+  | number // Pixel width
+  | "line" // 1px line (default)
+  | "thin" // 2px
+  | "medium" // 4px
+  | "thick"; // 8px
+
 export interface TooltipIndicatorProps {
+  /** X position in pixels (center of the indicator) */
   x: number;
+  /** Height of the indicator */
   height: number;
+  /** Whether the indicator is visible */
   visible: boolean;
-  color?: string;
+  /**
+   * Width of the indicator - number (pixels) or preset.
+   * Ignored if `span` is provided.
+   */
+  width?: IndicatorWidth;
+  /**
+   * Number of columns/days to span, with current point centered.
+   * e.g., span={2} spans 2 full day widths centered on x.
+   * Requires `columnWidth` to be set.
+   *
+   * Visual: span={2}
+   *       |     +     |
+   * ---X-----Y-----Z---
+   *     [==========]  <- spans from halfway to X to halfway to Z
+   */
+  span?: number;
+  /**
+   * Width of a single column/day in pixels.
+   * Required when using `span`. Calculate from xScale.
+   */
+  columnWidth?: number;
+  /** Primary color at edges (10% and 90%) */
+  colorEdge?: string;
+  /** Secondary color at center (50%) */
+  colorMid?: string;
+  /** Whether to fade to transparent at 0% and 100%, otherwise uses colorEdge */
+  fadeEdges?: boolean;
+  /** Unique ID for the gradient (needed if multiple indicators on same SVG) */
+  gradientId?: string;
+}
+
+// Convert width prop to pixel value
+function resolveWidth(width: IndicatorWidth): number {
+  if (typeof width === "number") return width;
+  switch (width) {
+    case "line":
+      return 1;
+    case "thin":
+      return 2;
+    case "medium":
+      return 4;
+    case "thick":
+      return 8;
+    default:
+      return 1;
+  }
 }
 
 export function TooltipIndicator({
   x,
   height,
   visible,
-  color = "currentColor",
+  width = "line",
+  span,
+  columnWidth,
+  colorEdge = "var(--chart-crosshair)",
+  colorMid = "var(--chart-crosshair)",
+  fadeEdges = true,
+  gradientId = "tooltip-indicator-gradient",
 }: TooltipIndicatorProps) {
-  const animatedX = useSpring(x, springConfig);
+  // Calculate pixel width - span takes precedence over width
+  const pixelWidth =
+    span !== undefined && columnWidth !== undefined
+      ? span * columnWidth
+      : resolveWidth(width);
+
+  // Animate X position (left edge of rect, centered on x)
+  const animatedX = useSpring(x - pixelWidth / 2, springConfig);
 
   React.useEffect(() => {
-    animatedX.set(x);
-  }, [x, animatedX]);
+    animatedX.set(x - pixelWidth / 2);
+  }, [x, animatedX, pixelWidth]);
 
   if (!visible) return null;
 
+  // Opacity at edges - 0 if fadeEdges, 1 otherwise
+  const edgeOpacity = fadeEdges ? 0 : 1;
+
   return (
-    <motion.line
-      x1={animatedX}
-      y1={0}
-      x2={animatedX}
-      y2={height}
-      stroke={color}
-      strokeWidth={1}
-    />
+    <g>
+      {/* Vertical gradient - fades at top/bottom. Uses style prop for CSS variable support */}
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop
+            offset="0%"
+            style={{ stopColor: colorEdge, stopOpacity: edgeOpacity }}
+          />
+          <stop offset="10%" style={{ stopColor: colorEdge, stopOpacity: 1 }} />
+          <stop offset="50%" style={{ stopColor: colorMid, stopOpacity: 1 }} />
+          <stop offset="90%" style={{ stopColor: colorEdge, stopOpacity: 1 }} />
+          <stop
+            offset="100%"
+            style={{ stopColor: colorEdge, stopOpacity: edgeOpacity }}
+          />
+        </linearGradient>
+      </defs>
+      <motion.rect
+        x={animatedX}
+        y={0}
+        width={pixelWidth}
+        height={height}
+        fill={`url(#${gradientId})`}
+      />
+    </g>
   );
 }
 

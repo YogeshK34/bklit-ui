@@ -103,6 +103,12 @@ function Chart({ width, height, data, animationDuration = 1100 }: ChartProps) {
     [innerWidth, data]
   );
 
+  // Calculate column width (spacing between data points)
+  const columnWidth = useMemo(() => {
+    if (data.length < 2) return 0;
+    return innerWidth / (data.length - 1);
+  }, [innerWidth, data.length]);
+
   const yScaleUsers = useMemo(
     () =>
       scaleLinear({
@@ -433,6 +439,18 @@ function Chart({ width, height, data, animationDuration = 1100 }: ChartProps) {
             />
           </g>
 
+          <TooltipIndicator
+            x={tooltipData?.x ?? 0}
+            height={innerHeight}
+            visible={!!tooltipData}
+            // span={2}
+            width="line"
+            columnWidth={columnWidth}
+            colorEdge={cssVars.crosshair}
+            colorMid={cssVars.crosshair}
+            fadeEdges
+          />
+
           {/* Highlighted segment using stroke-dasharray - only after animation completes */}
           {canInteract && isHovering && (
             <>
@@ -463,13 +481,6 @@ function Chart({ width, height, data, animationDuration = 1100 }: ChartProps) {
             </>
           )}
 
-          {/* Animated hover vertical line and dots */}
-          <TooltipIndicator
-            x={tooltipData?.x ?? 0}
-            height={innerHeight}
-            visible={!!tooltipData}
-            color={cssVars.crosshair}
-          />
           <TooltipDot
             x={tooltipData?.x ?? 0}
             y={tooltipData?.yUsers ?? 0}
@@ -525,9 +536,16 @@ function getTooltipRows(point: DataPoint): TooltipRow[] {
   ];
 }
 
-export default function CurvedLineChart() {
+export interface CurvedLineChartProps {
+  /** Animation duration in milliseconds. Default: 1500 */
+  animationDuration?: number;
+}
+
+export default function CurvedLineChart({
+  animationDuration: initialDuration = 1500,
+}: CurvedLineChartProps = {}) {
   const data = useMemo(() => generateData(), []);
-  const [animationDuration, setAnimationDuration] = useState(1500);
+  const [animationDuration, setAnimationDuration] = useState(initialDuration);
   const [chartKey, setChartKey] = useState(0);
 
   const handleReplay = () => {
