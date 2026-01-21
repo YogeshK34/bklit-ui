@@ -1,9 +1,9 @@
 import { GithubStatsProvider } from "@/components/providers/github-stats-provider";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import type { ReactNode } from "react";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geist = Geist({
   subsets: ["latin"],
@@ -26,8 +26,8 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
-      lang="en"
       className={`${geist.variable} ${geistMono.variable}`}
+      lang="en"
       suppressHydrationWarning
     >
       <body className="flex min-h-screen flex-col">
@@ -35,8 +35,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
-          enableSystem
           disableTransitionOnChange
+          enableSystem
         >
           {children}
           </ThemeProvider>

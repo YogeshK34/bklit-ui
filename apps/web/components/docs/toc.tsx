@@ -26,7 +26,7 @@ export function TableOfContents({ items }: TableOfContentsProps) {
           On this page
         </p>
         <AnchorProvider toc={items}>
-          <div ref={containerRef} className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto" ref={containerRef}>
             <ScrollProvider containerRef={containerRef}>
               <ul className="m-0 list-none p-0">
                 {items.map((item) => (
@@ -35,8 +35,8 @@ export function TableOfContents({ items }: TableOfContentsProps) {
                     style={{ paddingLeft: `${(item.depth - 2) * 12}px` }}
                   >
                     <TOCItem
-                      href={item.url}
                       className="block border-l-2 border-transparent px-2 py-1.5 text-[13px] text-muted-foreground no-underline transition-colors hover:text-foreground data-[active=true]:border-primary data-[active=true]:text-primary"
+                      href={item.url}
                     >
                       {item.title}
                     </TOCItem>

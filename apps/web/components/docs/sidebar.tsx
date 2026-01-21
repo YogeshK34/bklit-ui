@@ -52,12 +52,12 @@ function SidebarNode({ node }: { node: PageTree.Node }) {
     return (
       <li>
         <Link
-          href={node.url}
           className={`flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition-colors ${
             isActive
               ? "bg-primary/10 text-primary"
               : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
           }`}
+          href={node.url}
         >
           {node.icon}
           <span>{node.name}</span>
@@ -87,21 +87,21 @@ function SidebarFolder({
       <div className="flex items-center">
         {indexPage ? (
           <Link
-            href={indexPage.url}
             className={`flex flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sm no-underline transition-colors ${
               isIndexActive
                 ? "bg-primary/10 text-primary"
                 : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             }`}
+            href={indexPage.url}
           >
             {node.icon}
             <span>{node.name}</span>
           </Link>
         ) : (
           <button
-            type="button"
             className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border-none bg-transparent px-3 py-2 text-left text-sm text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
             onClick={() => setIsOpen(!isOpen)}
+            type="button"
           >
             {node.icon}
             <span>{node.name}</span>
@@ -109,18 +109,18 @@ function SidebarFolder({
         )}
         {node.children.length > 0 && (
           <button
-            type="button"
-            className="flex size-7 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
-            onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
             aria-label={isOpen ? "Collapse" : "Expand"}
+            className="flex size-7 cursor-pointer items-center justify-center rounded-md border-none bg-transparent text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+            onClick={() => setIsOpen(!isOpen)}
+            type="button"
           >
             <svg
-              viewBox="0 0 24 24"
+              className={`size-4 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
               fill="none"
               stroke="currentColor"
               strokeWidth={2}
-              className={`size-4 transition-transform duration-200 ${isOpen ? "rotate-90" : ""}`}
+              viewBox="0 0 24 24"
             >
               <path d="m9 18 6-6-6-6" />
             </svg>

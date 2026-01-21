@@ -1,8 +1,8 @@
 "use client";
 
+import { AnimatePresence, motion } from "motion/react";
 import React, { useState } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "motion/react";
 
 // CSS variable references
 const cssVars = {
@@ -129,84 +129,84 @@ export function MarkerGroup({
     <>
       {/* SVG anchor point - positioned group */}
       <g
-        transform={`translate(${x}, ${y})`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         style={{ cursor: "pointer" }}
+        transform={`translate(${x}, ${y})`}
       >
         {/* Animated wrapper for entrance effect */}
         <motion.g
-          initial={animate ? "hidden" : "visible"}
           animate="visible"
-          variants={markerEntranceVariants}
+          initial={animate ? "hidden" : "visible"}
           transition={{
             type: "spring",
             stiffness: 300,
             damping: 25,
             delay: animationDelay,
           }}
+          variants={markerEntranceVariants}
         >
           {/* Invisible hit area for easier hovering */}
           <rect
+            fill="transparent"
+            height={size * 3}
+            width={size * 2}
             x={-size}
             y={-size * 2.5}
-            width={size * 2}
-            height={size * 3}
-            fill="transparent"
           />
 
           {/* Vertical dashed guide line - responds to hover states */}
           {showLine && lineHeight > 0 && (
             <motion.line
-              x1={0}
-              y1={size / 2 + 4}
-              x2={0}
-              y2={lineHeight + Math.abs(y)}
-              stroke={cssVars.markerBorder}
-              strokeWidth={1}
-              strokeDasharray="4,4"
-              strokeLinecap="round"
               animate={{ 
                 // Marker hover: 100%, Day hover (crosshair): 0%, Default: 60%
                 strokeOpacity: isHovered ? 1 : isActive ? 0 : 0.6 
               }}
+              stroke={cssVars.markerBorder}
+              strokeDasharray="4,4"
+              strokeLinecap="round"
+              strokeWidth={1}
               transition={{ 
                 duration: 0.2,
                 ease: "easeOut"
               }}
+              x1={0}
+              x2={0}
+              y1={size / 2 + 4}
+              y2={lineHeight + Math.abs(y)}
             />
           )}
 
           {/* Main stacked marker (always visible) */}
           <MarkerCircle
+            color={markers[0]?.color}
             icon={markers[0]?.icon}
             size={size}
-            color={markers[0]?.color}
           />
 
           {/* Stack count badge when multiple */}
           <AnimatePresence>
             {hasMultiple && !shouldFan && (
               <motion.g
-                initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
+                initial={{ scale: 0, opacity: 0 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
                 <circle
                   cx={size / 2 + 2}
                   cy={-size / 2 - 2}
-                  r={9}
                   fill="var(--chart-line-primary)"
+                  r={9}
                 />
                 <text
-                  x={size / 2 + 2}
-                  y={-size / 2 - 2}
-                  textAnchor="middle"
                   dominantBaseline="central"
+                  fill="white"
                   fontSize={11}
                   fontWeight={600}
-                  fill="white"
+                  textAnchor="middle"
+                  x={size / 2 + 2}
+                  y={-size / 2 - 2}
                 >
                   {markers.length}
                 </text>
@@ -221,6 +221,8 @@ export function MarkerGroup({
         createPortal(
           <div
             className="absolute"
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{
               left: portalX,
               top: portalY,
@@ -228,8 +230,6 @@ export function MarkerGroup({
               // Pointer events only when fanned to capture hover area
               pointerEvents: shouldFan ? "auto" : "none",
             }}
-            onMouseEnter={handleMouseEnter}
-            onMouseLeave={handleMouseLeave}
           >
             {/* Invisible hit area to prevent hover flickering between circles */}
             {shouldFan && (
@@ -251,22 +251,22 @@ export function MarkerGroup({
                   const position = getCirclePosition(index, markers.length);
                   return (
                     <motion.div
-                      key={`fan-${index}`}
-                      className="absolute"
-                      style={{
-                        width: size,
-                        height: size,
-                        left: -size / 2,
-                        top: -size / 2,
-                      }}
-                      initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
                       animate={{
                         x: position.x,
                         y: position.y,
                         scale: 1,
                         opacity: 1,
                       }}
+                      className="absolute"
                       exit={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                      initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+                      key={`fan-${index}`}
+                      style={{
+                        width: size,
+                        height: size,
+                        left: -size / 2,
+                        top: -size / 2,
+                      }}
                       transition={{
                         type: "spring",
                         stiffness: 400,
@@ -275,13 +275,13 @@ export function MarkerGroup({
                       }}
                     >
                       <MarkerCircleHTML
-                        icon={marker.icon}
-                        size={size}
                         color={marker.color}
-                        onClick={marker.onClick}
                         href={marker.href}
-                        target={marker.target}
+                        icon={marker.icon}
                         isClickable={!!(marker.onClick || marker.href)}
+                        onClick={marker.onClick}
+                        size={size}
+                        target={marker.target}
                       />
                     </motion.div>
                   );
@@ -292,16 +292,16 @@ export function MarkerGroup({
             <AnimatePresence>
               {shouldFan && (
                 <motion.div
+                  animate={{ scale: 1, opacity: 0.5 }}
                   className="absolute"
+                  exit={{ scale: 0, opacity: 0 }}
+                  initial={{ scale: 0, opacity: 0 }}
                   style={{
                     width: size * 0.5,
                     height: size * 0.5,
                     left: -size * 0.25,
                     top: -size * 0.25,
                   }}
-                  initial={{ scale: 0, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 0.5 }}
-                  exit={{ scale: 0, opacity: 0 }}
                   transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 >
                   <div
@@ -335,22 +335,22 @@ function MarkerCircle({ icon, size, color }: MarkerCircleProps) {
   return (
     <g>
       {/* Shadow */}
-      <circle cx={0} cy={2} r={size / 2} fill="black" opacity={0.15} />
+      <circle cx={0} cy={2} fill="black" opacity={0.15} r={size / 2} />
       {/* Background */}
       <circle
         cx={0}
         cy={0}
-        r={size / 2}
         fill={color || cssVars.markerBackground}
+        r={size / 2}
         stroke={cssVars.markerBorder}
         strokeWidth={1.5}
       />
       {/* Icon container */}
       <foreignObject
+        height={size - 8}
+        width={size - 8}
         x={-size / 2 + 4}
         y={-size / 2 + 4}
-        width={size - 8}
-        height={size - 8}
       >
         <div
           style={{
@@ -400,13 +400,14 @@ function MarkerCircleHTML({
       className={`relative w-full h-full rounded-full flex items-center justify-center shadow-lg ${
         hasAction ? "cursor-pointer" : ""
       }`}
+      onClick={hasAction ? handleClick : undefined}
       style={{
         backgroundColor: color || cssVars.markerBackground,
         border: `1.5px solid ${cssVars.markerBorder}`,
         fontSize: size * 0.5,
         color: cssVars.markerForeground,
       }}
-      onClick={hasAction ? handleClick : undefined}
+      transition={{ type: "spring", stiffness: 400, damping: 17 }}
       whileHover={
         hasAction
           ? {
@@ -416,7 +417,6 @@ function MarkerCircleHTML({
           : undefined
       }
       whileTap={hasAction ? { scale: 0.95 } : undefined}
-      transition={{ type: "spring", stiffness: 400, damping: 17 }}
     >
       {icon}
     </motion.div>
@@ -441,7 +441,7 @@ export function MarkerTooltipContent({ markers }: MarkerTooltipContentProps) {
       {visibleMarkers.map((marker, index) => {
         const isClickable = !!(marker.onClick || marker.href);
         return (
-          <div key={index} className="flex items-start gap-2">
+          <div className="flex items-start gap-2" key={index}>
             <div
               className="flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center"
               style={{

@@ -34,8 +34,8 @@ export function SiteHeader({ title, links = [], githubUrl }: SiteHeaderProps) {
       <div className="mx-auto flex h-full max-w-7xl items-center gap-6 px-6">
         {/* Logo / Title */}
         <Link
-          href="/"
           className="text-lg font-semibold text-foreground no-underline transition-opacity hover:opacity-80"
+          href="/"
         >
           {title}
         </Link>
@@ -44,13 +44,13 @@ export function SiteHeader({ title, links = [], githubUrl }: SiteHeaderProps) {
         <nav className="ml-auto flex items-center gap-1">
           {links.map((link) => (
             <Link
-              key={link.url}
-              href={link.url}
               className={`rounded-lg px-3 py-2 text-sm font-medium no-underline transition-colors ${
                 isActive(link)
                   ? "text-foreground"
                   : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
               }`}
+              href={link.url}
+              key={link.url}
             >
               {link.text}
             </Link>
@@ -60,11 +60,11 @@ export function SiteHeader({ title, links = [], githubUrl }: SiteHeaderProps) {
         {/* Right side actions */}
         <div className="flex items-center gap-2">
         {githubUrl && (
-          <Button variant="ghost" size="sm">
+          <Button size="sm" variant="ghost">
           <Link
-              href={githubUrl}
-              external
               aria-label="GitHub"
+              external
+              href={githubUrl}
             >
               <GitHubIcon />
             <GithubStarCount />

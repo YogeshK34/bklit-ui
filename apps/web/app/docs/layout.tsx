@@ -1,13 +1,12 @@
 import { NextProvider } from "fumadocs-core/framework/next";
 import type { ReactNode } from "react";
-import { source } from "@/lib/source";
 import { DocsLayout } from "@/components/docs";
+import { source } from "@/lib/source";
 
 export default function Layout({ children }: { children: ReactNode }) {
   return (
     <NextProvider>
       <DocsLayout
-        tree={source.pageTree}
         nav={{
           title: (
             <span className="font-semibold">
@@ -28,6 +27,7 @@ export default function Layout({ children }: { children: ReactNode }) {
           ],
           githubUrl: "https://github.com/bklit/bklit-ui",
         }}
+        tree={source.pageTree}
       >
         {children}
       </DocsLayout>

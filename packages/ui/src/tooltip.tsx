@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useLayoutEffect, useState, useEffect } from "react";
-import { motion, useSpring, AnimatePresence } from "motion/react";
+import { AnimatePresence, motion, useSpring } from "motion/react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import useMeasure from "react-use-measure";
 
 // Spring config for smooth tooltip movement - matches dash array for consistency
@@ -77,8 +77,8 @@ function DateTicker({
         <motion.div className="flex flex-col" style={{ y }}>
           {labels.map((label, index) => (
             <div
-              key={index}
               className="flex items-center justify-center shrink-0 h-6"
+              key={index}
             >
               <span className="text-sm font-medium whitespace-nowrap">
                 {label}
@@ -110,23 +110,23 @@ function TooltipContent({
   return (
     <motion.div
       animate={{ height: bounds.height || "auto" }}
+      className="overflow-hidden"
       transition={{
         type: "spring",
         stiffness: 500,
         damping: 35,
         mass: 0.8,
       }}
-      className="overflow-hidden"
     >
-      <div ref={measureRef} className="px-3 py-2.5">
+      <div className="px-3 py-2.5" ref={measureRef}>
         {title && (
           <div className="text-xs font-medium text-zinc-400 mb-2">{title}</div>
         )}
         <div className="space-y-1.5">
           {rows.map((row, index) => (
             <div
-              key={index}
               className="flex items-center justify-between gap-4"
+              key={index}
             >
               <div className="flex items-center gap-2">
                 <span
@@ -148,15 +148,15 @@ function TooltipContent({
         <AnimatePresence mode="wait">
           {markerContent && (
             <motion.div
-              key={markerKey}
-              initial={{ opacity: 0, filter: "blur(4px)" }}
               animate={{ opacity: 1, filter: "blur(0px)" }}
+              className="mt-2"
               exit={{ opacity: 0, filter: "blur(4px)" }}
+              initial={{ opacity: 0, filter: "blur(4px)" }}
+              key={markerKey}
               transition={{
                 duration: 0.2,
                 ease: "easeOut",
               }}
-              className="mt-2"
             >
               {markerContent}
             </motion.div>
@@ -237,33 +237,33 @@ export function ChartTooltip({
     <>
       {/* Tooltip Box */}
       <motion.div
-        ref={tooltipRef}
+        animate={{ opacity: 1 }}
         className={`absolute pointer-events-none z-50 top-10 ${className}`}
+        exit={{ opacity: 0 }}
+        initial={{ opacity: 0 }}
+        ref={tooltipRef}
         style={{
           left: animatedLeft,
         }}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
         transition={{ duration: 0.1 }}
       >
         {/* Inner content with flip animation and height animation */}
         <motion.div
-          key={flipKey}
+          animate={{ scale: 1, opacity: 1, x: 0 }}
           className="bg-zinc-900/30 backdrop-blur-md text-white rounded-lg shadow-lg min-w-[140px] overflow-hidden"
           initial={{ scale: 0.85, opacity: 0, x: shouldFlip ? 20 : -20 }}
-          animate={{ scale: 1, opacity: 1, x: 0 }}
+          key={flipKey}
+          style={{ transformOrigin }}
           transition={{
             type: "spring",
             stiffness: 300,
             damping: 25,
           }}
-          style={{ transformOrigin }}
         >
           <TooltipContent
-            title={title}
-            rows={rows}
             markerContent={markerContent}
+            rows={rows}
+            title={title}
           />
         </motion.div>
       </motion.div>
@@ -386,7 +386,7 @@ export function TooltipIndicator({
     <g>
       {/* Vertical gradient - fades at top/bottom. Uses style prop for CSS variable support */}
       <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="0%" y2="100%">
+        <linearGradient id={gradientId} x1="0%" x2="0%" y1="0%" y2="100%">
           <stop
             offset="0%"
             style={{ stopColor: colorEdge, stopOpacity: edgeOpacity }}
@@ -401,11 +401,11 @@ export function TooltipIndicator({
         </linearGradient>
       </defs>
       <motion.rect
+        fill={`url(#${gradientId})`}
+        height={height}
+        width={pixelWidth}
         x={animatedX}
         y={0}
-        width={pixelWidth}
-        height={height}
-        fill={`url(#${gradientId})`}
       />
     </g>
   );
@@ -446,8 +446,8 @@ export function TooltipDot({
     <motion.circle
       cx={animatedX}
       cy={animatedY}
-      r={size}
       fill={color}
+      r={size}
       stroke={strokeColor}
       strokeWidth={strokeWidth}
     />

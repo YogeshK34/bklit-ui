@@ -1,4 +1,4 @@
 export { DocsLayout } from "./docs-layout";
-export { SiteHeader } from "./site-header";
 export { Sidebar } from "./sidebar";
+export { SiteHeader } from "./site-header";
 export { TableOfContents } from "./toc";

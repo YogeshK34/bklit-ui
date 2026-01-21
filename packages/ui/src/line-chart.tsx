@@ -1,27 +1,26 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { useMemo, useState, useCallback } from "react";
-import { LinePath } from "@visx/shape";
 import { curveNatural } from "@visx/curve";
-import { scaleTime, scaleLinear } from "@visx/scale";
-import { ParentSize } from "@visx/responsive";
 import { localPoint } from "@visx/event";
-import { useSpring, motion, AnimatePresence } from "motion/react";
+import { ParentSize } from "@visx/responsive";
+import { scaleLinear, scaleTime } from "@visx/scale";
+import { LinePath } from "@visx/shape";
 // @ts-expect-error - d3-array types not installed
 import { bisector } from "d3-array";
+import { AnimatePresence, motion, useSpring } from "motion/react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ChartGrid } from "./chart-grid";
+import {
+  type ChartMarker,
+  MarkerGroup,
+  MarkerTooltipContent,
+} from "./chart-marker";
 import {
   ChartTooltip,
   TooltipDot,
   TooltipIndicator,
   type TooltipRow,
 } from "./tooltip";
-import { ChartGrid } from "./chart-grid";
-import {
-  MarkerGroup,
-  MarkerTooltipContent,
-  type ChartMarker,
-} from "./chart-marker";
 
 interface DataPoint {
   date: Date;
@@ -107,6 +106,7 @@ function XAxisLabel({
 
   return (
     <motion.div
+      animate={{ opacity }}
       className="absolute text-xs whitespace-nowrap"
       style={{
         left: x,
@@ -114,7 +114,6 @@ function XAxisLabel({
         transform: "translateX(-50%)",
         color: cssVars.foregroundMuted,
       }}
-      animate={{ opacity }}
       transition={{ duration: 0.4, ease: "easeInOut" }}
     >
       {label}
@@ -160,11 +159,11 @@ function XAxisLabels({
     <div className="absolute inset-0 pointer-events-none">
       {labelsToShow.map((item, index) => (
         <XAxisLabel
+          crosshairX={crosshairX}
+          isHovering={isHovering}
           key={index}
           label={item.label}
           x={item.x}
-          crosshairX={crosshairX}
-          isHovering={isHovering}
         />
       ))}
     </div>
@@ -440,15 +439,12 @@ function Chart({
   const easing = "cubic-bezier(0.85, 0, 0.15, 1)";
 
   return (
-    <div ref={containerRef} className="relative w-full h-full">
-      <svg width={width} height={height}>
+    <div className="relative w-full h-full" ref={containerRef}>
+      <svg height={height} width={width}>
         <defs>
           {/* Clip path for grow animation - animates from left to right */}
           <clipPath id="grow-clip">
             <rect
-              x={0}
-              y={0}
-              width={isLoaded ? innerWidth : clipWidth}
               height={innerHeight + 20}
               style={{
                 transition:
@@ -456,6 +452,9 @@ function Chart({
                     ? `width ${animationDuration}ms ${easing}`
                     : "none",
               }}
+              width={isLoaded ? innerWidth : clipWidth}
+              x={0}
+              y={0}
             />
           </clipPath>
 
@@ -463,8 +462,8 @@ function Chart({
           <linearGradient
             id="line-primary-gradient"
             x1="0%"
-            y1="0%"
             x2="100%"
+            y1="0%"
             y2="0%"
           >
             <stop
@@ -489,8 +488,8 @@ function Chart({
           <linearGradient
             id="line-secondary-gradient"
             x1="0%"
-            y1="0%"
             x2="100%"
+            y1="0%"
             y2="0%"
           >
             <stop
@@ -512,32 +511,32 @@ function Chart({
           </linearGradient>
         </defs>
 
-        <rect x={0} y={0} width={width} height={height} fill="transparent" />
+        <rect fill="transparent" height={height} width={width} x={0} y={0} />
 
         <g transform={`translate(${margin.left},${margin.top})`}>
           {/* Optional grid */}
           {showGrid && (
             <ChartGrid
-              width={innerWidth}
               height={innerHeight}
+              showColumns={false}
+              showRows
+              stroke={cssVars.grid}
+              width={innerWidth}
               xScale={xScale}
               yScale={yScaleUsers}
-              showRows
-              showColumns={false}
-              stroke={cssVars.grid}
             />
           )}
 
           <TooltipIndicator
-            x={tooltipData?.x ?? 0}
-            height={innerHeight}
-            visible={!!tooltipData}
-            // span={2}
-            width="line"
-            columnWidth={columnWidth}
             colorEdge={cssVars.crosshair}
             colorMid={cssVars.crosshair}
+            columnWidth={columnWidth}
+            // span={2}
             fadeEdges
+            height={innerHeight}
+            visible={!!tooltipData}
+            width="line"
+            x={tooltipData?.x ?? 0}
           />
 
           {/* Lines group with clip path for grow animation */}
@@ -549,26 +548,26 @@ function Chart({
             >
               {/* Pageviews base line */}
               <LinePath
-                innerRef={pageviewsPathRef}
+                curve={curveNatural}
                 data={data}
+                innerRef={pageviewsPathRef}
+                stroke="url(#line-secondary-gradient)"
+                strokeLinecap="round"
+                strokeWidth={2.5}
                 x={(d) => xScale(getDate(d)) ?? 0}
                 y={(d) => yScalePageviews(d.pageviews) ?? 0}
-                stroke="url(#line-secondary-gradient)"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                curve={curveNatural}
               />
 
               {/* Users base line */}
               <LinePath
-                innerRef={usersPathRef}
+                curve={curveNatural}
                 data={data}
+                innerRef={usersPathRef}
+                stroke="url(#line-primary-gradient)"
+                strokeLinecap="round"
+                strokeWidth={2.5}
                 x={(d) => xScale(getDate(d)) ?? 0}
                 y={(d) => yScaleUsers(d.uniqueUsers) ?? 0}
-                stroke="url(#line-primary-gradient)"
-                strokeWidth={2.5}
-                strokeLinecap="round"
-                curve={curveNatural}
               />
             </motion.g>
           </g>
@@ -577,29 +576,29 @@ function Chart({
           <AnimatePresence>
             {canInteract && isHovering && (
               <motion.g
-                initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
+                initial={{ opacity: 0 }}
                 transition={{ duration: 0.4, ease: "easeInOut" }}
               >
                 {/* Pageviews highlight - use motion.path for spring animation */}
                 <motion.path
                   d={pageviewsPathRef.current?.getAttribute("d") || ""}
-                  stroke={cssVars.lineSecondary}
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
                   fill="none"
+                  stroke={cssVars.lineSecondary}
                   strokeDasharray={pageviewsDashProps.strokeDasharray}
+                  strokeLinecap="round"
+                  strokeWidth={2.5}
                   style={{ strokeDashoffset: pageviewsOffsetSpring }}
                 />
                 {/* Users highlight - use motion.path for spring animation */}
                 <motion.path
                   d={usersPathRef.current?.getAttribute("d") || ""}
-                  stroke={cssVars.linePrimary}
-                  strokeWidth={2.5}
-                  strokeLinecap="round"
                   fill="none"
+                  stroke={cssVars.linePrimary}
                   strokeDasharray={usersDashProps.strokeDasharray}
+                  strokeLinecap="round"
+                  strokeWidth={2.5}
                   style={{ strokeDashoffset: usersOffsetSpring }}
                 />
               </motion.g>
@@ -607,18 +606,18 @@ function Chart({
           </AnimatePresence>
 
           <TooltipDot
-            x={tooltipData?.x ?? 0}
-            y={tooltipData?.yUsers ?? 0}
-            visible={!!tooltipData}
             color={cssVars.linePrimary}
             strokeColor={cssVars.background}
+            visible={!!tooltipData}
+            x={tooltipData?.x ?? 0}
+            y={tooltipData?.yUsers ?? 0}
           />
           <TooltipDot
-            x={tooltipData?.x ?? 0}
-            y={tooltipData?.yPageviews ?? 0}
-            visible={!!tooltipData}
             color={cssVars.lineSecondary}
             strokeColor={cssVars.background}
+            visible={!!tooltipData}
+            x={tooltipData?.x ?? 0}
+            y={tooltipData?.yPageviews ?? 0}
           />
 
           {/* Markers at top of chart */}
@@ -637,19 +636,19 @@ function Chart({
 
               return (
                 <MarkerGroup
-                  key={dateKey}
-                  x={markerX}
-                  y={-8} // Position above chart area
-                  markers={dateMarkers}
-                  isActive={isActive}
-                  size={28}
-                  containerRef={containerRef}
-                  marginLeft={margin.left}
-                  marginTop={margin.top}
                   animate={true}
                   animationDelay={markerDelay}
+                  containerRef={containerRef} // Position above chart area
+                  isActive={isActive}
+                  key={dateKey}
                   lineHeight={innerHeight}
+                  marginLeft={margin.left}
+                  marginTop={margin.top}
+                  markers={dateMarkers}
                   showLine={true}
+                  size={28}
+                  x={markerX}
+                  y={-8}
                 />
               );
             }
@@ -657,28 +656,20 @@ function Chart({
 
           {/* Invisible overlay for mouse events - only active after animation completes */}
           <rect
+            fill="transparent"
+            height={innerHeight}
+            onMouseLeave={canInteract ? handleMouseLeave : undefined}
+            onMouseMove={canInteract ? handleMouseMove : undefined}
+            style={{ cursor: canInteract ? "crosshair" : "default" }}
+            width={innerWidth}
             x={0}
             y={0}
-            width={innerWidth}
-            height={innerHeight}
-            fill="transparent"
-            style={{ cursor: canInteract ? "crosshair" : "default" }}
-            onMouseMove={canInteract ? handleMouseMove : undefined}
-            onMouseLeave={canInteract ? handleMouseLeave : undefined}
           />
         </g>
       </svg>
 
       {/* HTML Tooltip - positioned with actual pixel coordinates */}
       <ChartTooltip
-        x={(tooltipData?.x ?? 0) + margin.left}
-        visible={!!tooltipData}
-        title={tooltipData?.point.date.toLocaleDateString("en-US", {
-          weekday: "short",
-          month: "short",
-          day: "numeric",
-        })}
-        rows={tooltipData ? getTooltipRows(tooltipData.point) : []}
         containerWidth={width}
         currentIndex={tooltipData?.index ?? 0}
         dateLabels={dateLabels}
@@ -687,16 +678,24 @@ function Chart({
             <MarkerTooltipContent markers={activeMarkers} />
           ) : undefined
         }
+        rows={tooltipData ? getTooltipRows(tooltipData.point) : []}
+        title={tooltipData?.point.date.toLocaleDateString("en-US", {
+          weekday: "short",
+          month: "short",
+          day: "numeric",
+        })}
+        visible={!!tooltipData}
+        x={(tooltipData?.x ?? 0) + margin.left}
       />
 
       {/* X-Axis Labels - fade as crosshair passes */}
       {showXAxisLabels && (
         <XAxisLabels
-          xScale={xScale}
-          marginLeft={margin.left}
           crosshairX={tooltipData ? tooltipData.x + margin.left : null}
           isHovering={isHovering}
+          marginLeft={margin.left}
           numTicks={6}
+          xScale={xScale}
         />
       )}
     </div>
@@ -818,30 +817,30 @@ export default function CurvedLineChart({
     <div className="w-full">
       <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4">
         <button
-          onClick={handleReplay}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-lg transition-colors"
+          onClick={handleReplay}
         >
           Replay Animation
         </button>
 
         {/* Responsive chart container - ParentSize handles resize detection */}
         <div
+          className="w-full relative"
           key={chartKey}
           ref={containerRef}
-          className="w-full relative"
           style={{ aspectRatio: "2 / 1" }}
         >
           <ParentSize debounceTime={10}>
             {({ width, height }) => (
               <Chart
-                width={width}
-                height={height}
-                data={data}
                 animationDuration={animationDuration}
-                showGrid={showGrid}
-                markers={markers}
-                showXAxisLabels={showXAxisLabels}
                 containerRef={containerRef}
+                data={data}
+                height={height}
+                markers={markers}
+                showGrid={showGrid}
+                showXAxisLabels={showXAxisLabels}
+                width={width}
               />
             )}
           </ParentSize>
@@ -855,13 +854,13 @@ export default function CurvedLineChart({
             Duration: {animationDuration}ms
           </label>
           <input
-            type="range"
-            min={200}
-            max={8000}
-            step={100}
-            value={animationDuration}
-            onChange={(e) => setAnimationDuration(Number(e.target.value))}
             className="flex-1 h-2 bg-zinc-200 dark:bg-zinc-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            max={8000}
+            min={200}
+            onChange={(e) => setAnimationDuration(Number(e.target.value))}
+            step={100}
+            type="range"
+            value={animationDuration}
           />
         </div>
       </div>

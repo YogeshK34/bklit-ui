@@ -1,8 +1,8 @@
 "use client";
 
+import { GridColumns, GridRows } from "@visx/grid";
+import type { ScaleLinear, ScaleTime } from "@visx/scale";
 import React from "react";
-import { GridRows, GridColumns } from "@visx/grid";
-import type { ScaleTime, ScaleLinear } from "@visx/scale";
 
 export interface ChartGridProps {
   /** Width of the grid area */
@@ -49,24 +49,24 @@ export function ChartGrid({
     <g className="chart-grid">
       {showRows && (
         <GridRows
-          scale={yScale}
-          width={width}
           numTicks={numTicksRows}
+          scale={yScale}
           stroke={stroke}
+          strokeDasharray={strokeDasharray}
           strokeOpacity={strokeOpacity}
           strokeWidth={strokeWidth}
-          strokeDasharray={strokeDasharray}
+          width={width}
         />
       )}
       {showColumns && (
         <GridColumns
-          scale={xScale}
           height={height}
           numTicks={numTicksColumns}
+          scale={xScale}
           stroke={stroke}
+          strokeDasharray={strokeDasharray}
           strokeOpacity={strokeOpacity}
           strokeWidth={strokeWidth}
-          strokeDasharray={strokeDasharray}
         />
       )}
     </g>

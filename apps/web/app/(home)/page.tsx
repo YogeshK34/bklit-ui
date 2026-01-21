@@ -20,8 +20,8 @@ export default function HomePage() {
 
         <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
           <Link
-            href="/docs"
             className="inline-flex h-12 items-center justify-center rounded-lg bg-fd-primary px-8 text-base font-medium text-fd-primary-foreground transition-colors hover:bg-fd-primary/90"
+            href="/docs"
           >
             Get Started
           </Link>

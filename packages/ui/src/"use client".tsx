@@ -35,19 +35,19 @@ export function FanCircles() {
           const position = getCirclePosition(index);
           return (
             <motion.div
-              key={index}
-              className="absolute top-1/2 left-1/2 w-8 h-8 rounded-full"
-              style={{
-                backgroundColor: `hsl(${index * (360 / CIRCLE_COUNT)}, 70%, 60%)`,
-                marginLeft: -16,
-                marginTop: -16,
-              }}
-              initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
               animate={{
                 x: isHovered ? position.x : 0,
                 y: isHovered ? position.y : 0,
                 scale: isHovered ? 1 : 0,
                 opacity: isHovered ? 1 : 0,
+              }}
+              className="absolute top-1/2 left-1/2 w-8 h-8 rounded-full"
+              initial={{ x: 0, y: 0, scale: 0, opacity: 0 }}
+              key={index}
+              style={{
+                backgroundColor: `hsl(${index * (360 / CIRCLE_COUNT)}, 70%, 60%)`,
+                marginLeft: -16,
+                marginTop: -16,
               }}
               transition={{
                 type: "spring",
@@ -62,9 +62,9 @@ export function FanCircles() {
         {/* Main target circle */}
         <motion.div
           className="relative z-10 w-8 h-8 rounded-full bg-foreground cursor-pointer"
+          transition={{ type: "spring", stiffness: 400, damping: 17 }}
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.95 }}
-          transition={{ type: "spring", stiffness: 400, damping: 17 }}
         />
       </div>
     </div>

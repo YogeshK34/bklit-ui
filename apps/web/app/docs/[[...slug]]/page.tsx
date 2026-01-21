@@ -1,10 +1,10 @@
-import { source } from "@/lib/source";
-import { notFound } from "next/navigation";
+import type { TOCItemType } from "fumadocs-core/toc";
 import defaultMdxComponents from "fumadocs-ui/mdx";
+import { notFound } from "next/navigation";
+import type { ComponentType } from "react";
 import { ComponentPreview } from "@/components/component-preview";
 import { TableOfContents } from "@/components/docs";
-import type { TOCItemType } from "fumadocs-core/toc";
-import type { ComponentType } from "react";
+import { source } from "@/lib/source";
 
 // Extended page data types from fumadocs-mdx
 interface PageData {

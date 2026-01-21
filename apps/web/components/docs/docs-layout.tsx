@@ -1,7 +1,7 @@
 import type * as PageTree from "fumadocs-core/page-tree";
 import type { ReactNode } from "react";
-import { SiteHeader } from "./site-header";
 import { Sidebar } from "./sidebar";
+import { SiteHeader } from "./site-header";
 
 interface NavLink {
   text: string;
@@ -23,9 +23,9 @@ export function DocsLayout({ children, tree, nav }: DocsLayoutProps) {
   return (
     <div className="min-h-screen">
       <SiteHeader
-        title={nav?.title ?? "Documentation"}
-        links={nav?.links}
         githubUrl={nav?.githubUrl}
+        links={nav?.links}
+        title={nav?.title ?? "Documentation"}
       />
       <div className="mx-auto max-w-7xl pt-14">
         <Sidebar tree={tree} />
