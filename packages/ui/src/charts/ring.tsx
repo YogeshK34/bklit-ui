@@ -2,7 +2,7 @@
 
 import { Arc, arc as arcGenerator } from "@visx/shape";
 import { motion, useSpring, useTransform } from "motion/react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { ringCssVars, useRing } from "./ring-context";
 
 // Helper to generate arc path using d3 arc generator
@@ -40,6 +40,7 @@ interface AnimatedProgressArcProps {
   color: string;
   isHovered: boolean;
   isFaded: boolean;
+  isPushedOut: boolean;
   animationKey: number;
   showGlow: boolean;
 }
@@ -52,6 +53,7 @@ function AnimatedProgressArc({
   color,
   isHovered,
   isFaded,
+  isPushedOut,
   animationKey,
   showGlow,
 }: AnimatedProgressArcProps) {
@@ -93,11 +95,22 @@ function AnimatedProgressArc({
     );
   });
 
+  // Calculate scale: hovered ring scales up, outer rings pushed out
+  const getScale = () => {
+    if (isHovered) {
+      return 1.03;
+    }
+    if (isPushedOut) {
+      return 1.02;
+    }
+    return 1;
+  };
+
   return (
     <motion.path
       animate={{
         opacity: isFaded ? 0.4 : 1,
-        scale: isHovered ? 1.03 : 1,
+        scale: getScale(),
       }}
       d={animatedPath}
       fill={color}
@@ -108,8 +121,8 @@ function AnimatedProgressArc({
           showGlow && isHovered ? `drop-shadow(0 0 12px ${color})` : "none",
       }}
       transition={{
-        opacity: { duration: 0.2 },
-        scale: { duration: 0.2 },
+        opacity: { duration: 0.15 },
+        scale: { type: "spring", stiffness: 400, damping: 25 },
       }}
     />
   );
@@ -130,6 +143,22 @@ export function Ring({
     getRingRadii,
   } = useRing();
 
+  // Track if initial mount animation is complete (must be before early return)
+  const hasAnimated = useRef(false);
+  const ringExpandDelay = index * 0.08;
+
+  useEffect(() => {
+    if (animate && !hasAnimated.current) {
+      const timeout = setTimeout(
+        () => {
+          hasAnimated.current = true;
+        },
+        (ringExpandDelay + 0.3) * 1000
+      );
+      return () => clearTimeout(timeout);
+    }
+  }, [animate, ringExpandDelay]);
+
   const ringData = data[index];
   if (!ringData) {
     return null;
@@ -141,9 +170,22 @@ export function Ring({
 
   const isHovered = hoveredIndex === index;
   const isFaded = hoveredIndex !== null && hoveredIndex !== index;
+  // Ring is pushed out when a ring with lower index (inner ring) is hovered
+  const isPushedOut = hoveredIndex !== null && hoveredIndex < index;
 
-  // Stagger delay for ring expansion (phase 1)
-  const ringExpandDelay = index * 0.08;
+  // Only apply delay on initial mount, not on hover changes
+  const shouldDelay = animate && !hasAnimated.current;
+
+  // Calculate scale for background and progress arcs
+  const getScale = () => {
+    if (isHovered) {
+      return 1.03;
+    }
+    if (isPushedOut) {
+      return 1.02;
+    }
+    return 1;
+  };
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: SVG group for hover interaction
@@ -163,7 +205,7 @@ export function Ring({
         {({ path }) => (
           <motion.path
             animate={{
-              scale: 1,
+              scale: animate ? getScale() : 1,
               opacity: isFaded ? 0.3 : 1,
             }}
             d={path(null) || ""}
@@ -174,11 +216,11 @@ export function Ring({
             transition={{
               scale: {
                 type: "spring",
-                stiffness: 200,
-                damping: 20,
-                delay: animate ? ringExpandDelay : 0,
+                stiffness: 400,
+                damping: 25,
+                delay: shouldDelay ? ringExpandDelay : 0,
               },
-              opacity: { duration: 0.2 },
+              opacity: { duration: 0.15 },
             }}
           />
         )}
@@ -193,6 +235,7 @@ export function Ring({
           innerRadius={innerRadius}
           isFaded={isFaded}
           isHovered={isHovered}
+          isPushedOut={isPushedOut}
           outerRadius={outerRadius}
           progress={progress}
           showGlow={showGlow}
@@ -201,7 +244,7 @@ export function Ring({
         <motion.path
           animate={{
             opacity: isFaded ? 0.4 : 1,
-            scale: isHovered ? 1.03 : 1,
+            scale: getScale(),
           }}
           d={generateArcPath(
             innerRadius,
@@ -217,8 +260,8 @@ export function Ring({
               showGlow && isHovered ? `drop-shadow(0 0 12px ${color})` : "none",
           }}
           transition={{
-            opacity: { duration: 0.2 },
-            scale: { duration: 0.2 },
+            opacity: { duration: 0.15 },
+            scale: { type: "spring", stiffness: 400, damping: 25 },
           }}
         />
       )}
