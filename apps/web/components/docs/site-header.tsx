@@ -181,13 +181,14 @@ export function SiteHeader({
 
       {/* Sheet */}
       <div
-        className={`fixed top-14 right-0 left-0 z-40 border-border border-b bg-background/95 backdrop-blur-xl transition-all duration-300 ease-out md:hidden ${
+        className={`fixed top-14 right-0 left-0 z-50 max-h-[calc(100vh-3.5rem)] overflow-y-auto overscroll-contain border-border border-b bg-background/95 backdrop-blur-xl transition-all duration-300 ease-out md:hidden ${
           mobileMenuOpen
             ? "translate-y-0 opacity-100"
             : "pointer-events-none -translate-y-4 opacity-0"
         }`}
+        style={{ WebkitOverflowScrolling: "touch" }}
       >
-        <nav className="flex flex-col px-6 py-4">
+        <nav className="flex flex-col px-6 py-4 pb-8">
           {/* Main links */}
           <div className="flex flex-col gap-1">
             {links.map((link, index) => (
