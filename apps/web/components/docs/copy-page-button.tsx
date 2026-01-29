@@ -40,17 +40,30 @@ export function CopyPageButton({ content, url }: CopyPageButtonProps) {
   return (
     <div className="hidden md:flex">
       <Button
-        className="rounded-r-none border-r-0"
+        className="rounded-r-none border-r-0 text-xs"
         onClick={handleCopy}
         size="sm"
         variant="outline"
       >
-        {copied ? (
-          <CheckIcon className="size-4" />
-        ) : (
-          <CopyIcon className="size-4" />
-        )}
-        <span>{copied ? "Copied!" : "Copy Page"}</span>
+        <span className="relative size-3">
+          <CopyIcon
+            className="absolute inset-0 size-3 transition-all duration-300 ease-out"
+            style={{
+              opacity: copied ? 0 : 1,
+              filter: copied ? "blur(4px)" : "blur(0px)",
+              transform: copied ? "scale(0.8)" : "scale(1)",
+            }}
+          />
+          <CheckIcon
+            className="absolute inset-0 size-3 transition-all duration-300 ease-out"
+            style={{
+              opacity: copied ? 1 : 0,
+              filter: copied ? "blur(0px)" : "blur(4px)",
+              transform: copied ? "scale(1)" : "scale(0.8)",
+            }}
+          />
+        </span>
+        <span>Copy Page</span>
       </Button>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
