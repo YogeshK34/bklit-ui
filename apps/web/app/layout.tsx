@@ -18,10 +18,24 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "bklit-ui",
-    template: "%s | bklit-ui",
+    default: "Bklit UI - Charts & Data Visualization Components",
+    template: "%s | Bklit UI",
   },
-  description: "Beautiful UI components for React",
+  description:
+    "Bklit UI is a component library built on top of shadcn/ui to help you build charts and data visualizations more easily.",
+  openGraph: {
+    title: "Bklit UI - Charts & Data Visualization Components",
+    description:
+      "Bklit UI is a component library built on top of shadcn/ui to help you build charts and data visualizations more easily.",
+    type: "website",
+    url: "https://ui.bklit.com",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bklit UI - Charts & Data Visualization Components",
+    description:
+      "Bklit UI is a component library built on top of shadcn/ui to help you build charts and data visualizations more easily.",
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
