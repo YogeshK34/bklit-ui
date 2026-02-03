@@ -17,11 +17,13 @@
   },
   "scripts": {
     "lint": "eslint . --max-warnings 0",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "registry:build": "shadcn build --output ../../apps/web/public/r && cp registry.json ../../apps/web/public/r/registry.json"
   },
   "devDependencies": {
     "@bklitui/eslint-config": "workspace:*",
     "@bklitui/typescript-config": "workspace:*",
+    "shadcn": "^2.5.0",
     "@types/d3-array": "^3.2.1",
     "@types/d3-geo": "^3.1.0",
     "@types/d3-sankey": "^0.12.5",

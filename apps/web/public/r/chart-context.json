@@ -1,0 +1,63 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry-item.json",
+  "name": "chart-context",
+  "type": "registry:component",
+  "title": "Chart Context",
+  "description": "Shared context and hooks for Bklit chart components",
+  "dependencies": [
+    "@visx/event",
+    "@visx/responsive",
+    "@visx/scale",
+    "d3-array"
+  ],
+  "registryDependencies": ["utils"],
+  "files": [
+    {
+      "path": "src/charts/chart-context.tsx",
+      "content": "\"use client\";\n\nimport type { scaleBand, scaleLinear, scaleTime } from \"@visx/scale\";\n\ntype ScaleLinear<Output, _Input = number> = ReturnType<\n  typeof scaleLinear<Output>\n>;\ntype ScaleTime<Output, _Input = Date | number> = ReturnType<\n  typeof scaleTime<Output>\n>;\ntype ScaleBand<Domain extends { toString(): string }> = ReturnType<\n  typeof scaleBand<Domain>\n>;\n\nimport {\n  createContext,\n  type Dispatch,\n  type RefObject,\n  type SetStateAction,\n  useContext,\n} from \"react\";\n\n// CSS variable references for theming\nexport const chartCssVars = {\n  background: \"var(--chart-background)\",\n  foreground: \"var(--chart-foreground)\",\n  foregroundMuted: \"var(--chart-foreground-muted)\",\n  label: \"var(--chart-label)\",\n  linePrimary: \"var(--chart-line-primary)\",\n  lineSecondary: \"var(--chart-line-secondary)\",\n  crosshair: \"var(--chart-crosshair)\",\n  grid: \"var(--chart-grid)\",\n  markerBackground: \"var(--chart-marker-background)\",\n  markerBorder: \"var(--chart-marker-border)\",\n  markerForeground: \"var(--chart-marker-foreground)\",\n};\n\nexport interface Margin {\n  top: number;\n  right: number;\n  bottom: number;\n  left: number;\n}\n\nexport interface TooltipData {\n  /** The data point being hovered */\n  point: Record<string, unknown>;\n  /** Index in the data array */\n  index: number;\n  /** X position in pixels (relative to chart area) */\n  x: number;\n  /** Y positions for each line, keyed by dataKey */\n  yPositions: Record<string, number>;\n  /** X positions for each series (for grouped bars), keyed by dataKey */\n  xPositions?: Record<string, number>;\n}\n\nexport interface LineConfig {\n  dataKey: string;\n  stroke: string;\n  strokeWidth: number;\n}\n\nexport interface ChartContextValue {\n  // Data\n  data: Record<string, unknown>[];\n\n  // Scales\n  xScale: ScaleTime<number, number>;\n  yScale: ScaleLinear<number, number>;\n\n  // Dimensions\n  width: number;\n  height: number;\n  innerWidth: number;\n  innerHeight: number;\n  margin: Margin;\n\n  // Column width for spacing calculations\n  columnWidth: number;\n\n  // Tooltip state\n  tooltipData: TooltipData | null;\n  setTooltipData: Dispatch<SetStateAction<TooltipData | null>>;\n\n  // Container ref for portals\n  containerRef: RefObject<HTMLDivElement | null>;\n\n  // Line configurations (extracted from children)\n  lines: LineConfig[];\n\n  // Animation state\n  isLoaded: boolean;\n  animationDuration: number;\n\n  // X accessor - how to get the x value from data points\n  xAccessor: (d: Record<string, unknown>) => Date;\n\n  // Pre-computed date labels for ticker animation\n  dateLabels: string[];\n\n  // Bar chart specific (optional - only present in BarChart)\n  /** Band scale for categorical x-axis (bar charts) */\n  barScale?: ScaleBand<string>;\n  /** Width of each bar band */\n  bandWidth?: number;\n  /** Index of currently hovered bar */\n  hoveredBarIndex?: number | null;\n  /** Setter for hovered bar index */\n  setHoveredBarIndex?: (index: number | null) => void;\n  /** X accessor for bar charts (returns string instead of Date) */\n  barXAccessor?: (d: Record<string, unknown>) => string;\n  /** Bar chart orientation */\n  orientation?: \"vertical\" | \"horizontal\";\n  /** Whether bars are stacked */\n  stacked?: boolean;\n  /** Stack offsets: Map of data index -> Map of dataKey -> cumulative offset */\n  stackOffsets?: Map<number, Map<string, number>>;\n}\n\nconst ChartContext = createContext<ChartContextValue | null>(null);\n\nexport function ChartProvider({\n  children,\n  value,\n}: {\n  children: React.ReactNode;\n  value: ChartContextValue;\n}) {\n  return (\n    <ChartContext.Provider value={value}>{children}</ChartContext.Provider>\n  );\n}\n\nexport function useChart(): ChartContextValue {\n  const context = useContext(ChartContext);\n  if (!context) {\n    throw new Error(\n      \"useChart must be used within a ChartProvider. \" +\n        \"Make sure your component is wrapped in <LineChart>, <AreaChart>, or <BarChart>.\"\n    );\n  }\n  return context;\n}\n\nexport default ChartContext;\n",
+      "type": "registry:component",
+      "target": "components/charts/chart-context.tsx"
+    }
+  ],
+  "cssVars": {
+    "light": {
+      "--chart-1": "oklch(0.32 0 none)",
+      "--chart-2": "oklch(0.41 0 none)",
+      "--chart-3": "oklch(0.54 0 none)",
+      "--chart-4": "oklch(0.71 0 none)",
+      "--chart-5": "oklch(0.89 0 none)",
+      "--chart-background": "oklch(1 0 0)",
+      "--chart-foreground": "oklch(0.145 0.004 285)",
+      "--chart-foreground-muted": "oklch(0.55 0.014 260)",
+      "--chart-line-primary": "var(--chart-1)",
+      "--chart-line-secondary": "var(--chart-2)",
+      "--chart-crosshair": "oklch(0.4 0.1828 274.34)",
+      "--chart-grid": "oklch(0.9 0 0)",
+      "--chart-tooltip-background": "oklch(0.21 0.006 285 / 0.8)",
+      "--chart-tooltip-foreground": "oklch(0.985 0 0)",
+      "--chart-tooltip-muted": "oklch(0.65 0.01 260)",
+      "--chart-marker-background": "oklch(0.97 0.005 260)",
+      "--chart-marker-border": "oklch(0.85 0.01 260)",
+      "--chart-marker-foreground": "oklch(0.3 0.01 260)",
+      "--chart-ring-background": "oklch(0.9 0.005 260 / 0.25)",
+      "--chart-label": "oklch(0.45 0.01 260)"
+    },
+    "dark": {
+      "--chart-1": "oklch(1 0 none)",
+      "--chart-2": "oklch(0.73 0 none)",
+      "--chart-3": "oklch(0.51 0 none)",
+      "--chart-4": "oklch(0.39 0 none)",
+      "--chart-5": "oklch(0.32 0 none)",
+      "--chart-background": "oklch(0.145 0 0)",
+      "--chart-foreground": "oklch(0.45 0 0)",
+      "--chart-foreground-muted": "oklch(0.65 0.01 260)",
+      "--chart-crosshair": "oklch(0.45 0 0)",
+      "--chart-grid": "oklch(0.25 0 0)",
+      "--chart-marker-background": "oklch(0.25 0.01 260)",
+      "--chart-marker-border": "oklch(0.4 0.01 260)",
+      "--chart-marker-foreground": "oklch(0.9 0 0)",
+      "--chart-ring-background": "oklch(0.35 0.01 260 / 0.25)",
+      "--chart-label": "oklch(0.75 0.01 260)"
+    }
+  }
+}

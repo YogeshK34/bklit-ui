@@ -1,0 +1,536 @@
+{
+  "$schema": "https://ui.shadcn.com/schema/registry.json",
+  "name": "bklit-ui",
+  "homepage": "https://ui.bklit.com",
+  "items": [
+    {
+      "name": "utils",
+      "type": "registry:lib",
+      "title": "Utilities",
+      "description": "Utility functions for className merging with clsx and tailwind-merge",
+      "dependencies": ["clsx", "tailwind-merge"],
+      "files": [
+        {
+          "path": "src/lib/utils.ts",
+          "type": "registry:lib",
+          "target": "lib/utils.ts"
+        }
+      ]
+    },
+    {
+      "name": "chart-context",
+      "type": "registry:component",
+      "title": "Chart Context",
+      "description": "Shared context and hooks for Bklit chart components",
+      "registryDependencies": ["utils"],
+      "dependencies": [
+        "@visx/event",
+        "@visx/responsive",
+        "@visx/scale",
+        "d3-array"
+      ],
+      "cssVars": {
+        "light": {
+          "--chart-1": "oklch(0.32 0 none)",
+          "--chart-2": "oklch(0.41 0 none)",
+          "--chart-3": "oklch(0.54 0 none)",
+          "--chart-4": "oklch(0.71 0 none)",
+          "--chart-5": "oklch(0.89 0 none)",
+          "--chart-background": "oklch(1 0 0)",
+          "--chart-foreground": "oklch(0.145 0.004 285)",
+          "--chart-foreground-muted": "oklch(0.55 0.014 260)",
+          "--chart-line-primary": "var(--chart-1)",
+          "--chart-line-secondary": "var(--chart-2)",
+          "--chart-crosshair": "oklch(0.4 0.1828 274.34)",
+          "--chart-grid": "oklch(0.9 0 0)",
+          "--chart-tooltip-background": "oklch(0.21 0.006 285 / 0.8)",
+          "--chart-tooltip-foreground": "oklch(0.985 0 0)",
+          "--chart-tooltip-muted": "oklch(0.65 0.01 260)",
+          "--chart-marker-background": "oklch(0.97 0.005 260)",
+          "--chart-marker-border": "oklch(0.85 0.01 260)",
+          "--chart-marker-foreground": "oklch(0.3 0.01 260)",
+          "--chart-ring-background": "oklch(0.9 0.005 260 / 0.25)",
+          "--chart-label": "oklch(0.45 0.01 260)"
+        },
+        "dark": {
+          "--chart-1": "oklch(1 0 none)",
+          "--chart-2": "oklch(0.73 0 none)",
+          "--chart-3": "oklch(0.51 0 none)",
+          "--chart-4": "oklch(0.39 0 none)",
+          "--chart-5": "oklch(0.32 0 none)",
+          "--chart-background": "oklch(0.145 0 0)",
+          "--chart-foreground": "oklch(0.45 0 0)",
+          "--chart-foreground-muted": "oklch(0.65 0.01 260)",
+          "--chart-crosshair": "oklch(0.45 0 0)",
+          "--chart-grid": "oklch(0.25 0 0)",
+          "--chart-marker-background": "oklch(0.25 0.01 260)",
+          "--chart-marker-border": "oklch(0.4 0.01 260)",
+          "--chart-marker-foreground": "oklch(0.9 0 0)",
+          "--chart-ring-background": "oklch(0.35 0.01 260 / 0.25)",
+          "--chart-label": "oklch(0.75 0.01 260)"
+        }
+      },
+      "files": [
+        {
+          "path": "src/charts/chart-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/chart-context.tsx"
+        }
+      ]
+    },
+    {
+      "name": "grid",
+      "type": "registry:component",
+      "title": "Chart Grid",
+      "description": "Grid lines for charts",
+      "registryDependencies": ["chart-context"],
+      "dependencies": ["@visx/grid"],
+      "files": [
+        {
+          "path": "src/charts/grid.tsx",
+          "type": "registry:component",
+          "target": "components/charts/grid.tsx"
+        }
+      ]
+    },
+    {
+      "name": "x-axis",
+      "type": "registry:component",
+      "title": "X Axis",
+      "description": "X-axis component for time-series charts",
+      "registryDependencies": ["chart-context", "utils"],
+      "files": [
+        {
+          "path": "src/charts/x-axis.tsx",
+          "type": "registry:component",
+          "target": "components/charts/x-axis.tsx"
+        }
+      ]
+    },
+    {
+      "name": "chart-tooltip",
+      "type": "registry:component",
+      "title": "Chart Tooltip",
+      "description": "Composable tooltip components for charts",
+      "registryDependencies": ["chart-context", "utils"],
+      "dependencies": ["@number-flow/react", "motion"],
+      "files": [
+        {
+          "path": "src/charts/tooltip/chart-tooltip.tsx",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/chart-tooltip.tsx"
+        },
+        {
+          "path": "src/charts/tooltip/tooltip-box.tsx",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/tooltip-box.tsx"
+        },
+        {
+          "path": "src/charts/tooltip/tooltip-content.tsx",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/tooltip-content.tsx"
+        },
+        {
+          "path": "src/charts/tooltip/tooltip-dot.tsx",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/tooltip-dot.tsx"
+        },
+        {
+          "path": "src/charts/tooltip/tooltip-indicator.tsx",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/tooltip-indicator.tsx"
+        },
+        {
+          "path": "src/charts/tooltip/date-ticker.tsx",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/date-ticker.tsx"
+        },
+        {
+          "path": "src/charts/tooltip/index.ts",
+          "type": "registry:component",
+          "target": "components/charts/tooltip/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "legend",
+      "type": "registry:component",
+      "title": "Chart Legend",
+      "description": "Composable legend components for charts",
+      "registryDependencies": ["utils"],
+      "dependencies": ["@number-flow/react"],
+      "cssVars": {
+        "light": {
+          "--legend": "oklch(1 0 0)",
+          "--legend-foreground": "oklch(0.141 0.005 285.823)",
+          "--legend-muted": "oklch(0.967 0.001 286.375)",
+          "--legend-muted-foreground": "oklch(0.552 0.016 285.938)",
+          "--legend-track": "oklch(0.92 0.004 286.32)"
+        },
+        "dark": {
+          "--legend": "oklch(0.21 0.006 285.885)",
+          "--legend-foreground": "oklch(0.985 0 0)",
+          "--legend-muted": "oklch(0.274 0.006 286.033)",
+          "--legend-muted-foreground": "oklch(0.705 0.015 286.067)",
+          "--legend-track": "oklch(0.274 0.006 286.033)"
+        }
+      },
+      "files": [
+        {
+          "path": "src/charts/legend/legend.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend.tsx"
+        },
+        {
+          "path": "src/charts/legend/legend-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend-context.tsx"
+        },
+        {
+          "path": "src/charts/legend/legend-item.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend-item.tsx"
+        },
+        {
+          "path": "src/charts/legend/legend-label.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend-label.tsx"
+        },
+        {
+          "path": "src/charts/legend/legend-marker.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend-marker.tsx"
+        },
+        {
+          "path": "src/charts/legend/legend-progress.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend-progress.tsx"
+        },
+        {
+          "path": "src/charts/legend/legend-value.tsx",
+          "type": "registry:component",
+          "target": "components/charts/legend/legend-value.tsx"
+        },
+        {
+          "path": "src/charts/legend/index.ts",
+          "type": "registry:component",
+          "target": "components/charts/legend/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "markers",
+      "type": "registry:component",
+      "title": "Chart Markers",
+      "description": "Marker components for highlighting data points on charts",
+      "registryDependencies": ["chart-context", "chart-tooltip", "utils"],
+      "files": [
+        {
+          "path": "src/charts/markers/chart-markers.tsx",
+          "type": "registry:component",
+          "target": "components/charts/markers/chart-markers.tsx"
+        },
+        {
+          "path": "src/charts/markers/marker-group.tsx",
+          "type": "registry:component",
+          "target": "components/charts/markers/marker-group.tsx"
+        },
+        {
+          "path": "src/charts/markers/index.ts",
+          "type": "registry:component",
+          "target": "components/charts/markers/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "area-chart",
+      "type": "registry:component",
+      "title": "Area Chart",
+      "description": "A composable area chart with gradient fills and animations",
+      "registryDependencies": [
+        "chart-context",
+        "grid",
+        "x-axis",
+        "chart-tooltip",
+        "utils"
+      ],
+      "dependencies": [
+        "@visx/curve",
+        "@visx/gradient",
+        "@visx/shape",
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "src/charts/area-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/area-chart.tsx"
+        },
+        {
+          "path": "src/charts/area.tsx",
+          "type": "registry:component",
+          "target": "components/charts/area.tsx"
+        }
+      ]
+    },
+    {
+      "name": "bar-chart",
+      "type": "registry:component",
+      "title": "Bar Chart",
+      "description": "A composable bar chart with horizontal/vertical orientations and animations",
+      "registryDependencies": [
+        "chart-context",
+        "grid",
+        "chart-tooltip",
+        "utils"
+      ],
+      "dependencies": [
+        "@visx/gradient",
+        "@visx/pattern",
+        "@visx/shape",
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "src/charts/bar-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/bar-chart.tsx"
+        },
+        {
+          "path": "src/charts/bar.tsx",
+          "type": "registry:component",
+          "target": "components/charts/bar.tsx"
+        },
+        {
+          "path": "src/charts/bar-x-axis.tsx",
+          "type": "registry:component",
+          "target": "components/charts/bar-x-axis.tsx"
+        },
+        {
+          "path": "src/charts/bar-y-axis.tsx",
+          "type": "registry:component",
+          "target": "components/charts/bar-y-axis.tsx"
+        }
+      ]
+    },
+    {
+      "name": "line-chart",
+      "type": "registry:component",
+      "title": "Line Chart",
+      "description": "A composable line chart with multiple series support",
+      "registryDependencies": [
+        "chart-context",
+        "grid",
+        "x-axis",
+        "chart-tooltip",
+        "utils"
+      ],
+      "dependencies": ["@visx/curve", "@visx/shape", "motion"],
+      "files": [
+        {
+          "path": "src/charts/line-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/line-chart.tsx"
+        },
+        {
+          "path": "src/charts/line.tsx",
+          "type": "registry:component",
+          "target": "components/charts/line.tsx"
+        }
+      ]
+    },
+    {
+      "name": "pie-chart",
+      "type": "registry:component",
+      "title": "Pie Chart",
+      "description": "A composable pie chart with animations and customizable slices",
+      "registryDependencies": ["utils"],
+      "dependencies": ["@visx/responsive", "@visx/shape", "motion"],
+      "files": [
+        {
+          "path": "src/charts/pie-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/pie-chart.tsx"
+        },
+        {
+          "path": "src/charts/pie-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/pie-context.tsx"
+        },
+        {
+          "path": "src/charts/pie-slice.tsx",
+          "type": "registry:component",
+          "target": "components/charts/pie-slice.tsx"
+        },
+        {
+          "path": "src/charts/pie-center.tsx",
+          "type": "registry:component",
+          "target": "components/charts/pie-center.tsx"
+        }
+      ]
+    },
+    {
+      "name": "radar-chart",
+      "type": "registry:component",
+      "title": "Radar Chart",
+      "description": "A composable radar/spider chart with multiple data series",
+      "registryDependencies": ["utils"],
+      "dependencies": ["@visx/responsive", "d3-shape", "motion"],
+      "files": [
+        {
+          "path": "src/charts/radar-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/radar-chart.tsx"
+        },
+        {
+          "path": "src/charts/radar-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/radar-context.tsx"
+        },
+        {
+          "path": "src/charts/radar-area.tsx",
+          "type": "registry:component",
+          "target": "components/charts/radar-area.tsx"
+        },
+        {
+          "path": "src/charts/radar-axis.tsx",
+          "type": "registry:component",
+          "target": "components/charts/radar-axis.tsx"
+        },
+        {
+          "path": "src/charts/radar-grid.tsx",
+          "type": "registry:component",
+          "target": "components/charts/radar-grid.tsx"
+        },
+        {
+          "path": "src/charts/radar-labels.tsx",
+          "type": "registry:component",
+          "target": "components/charts/radar-labels.tsx"
+        }
+      ]
+    },
+    {
+      "name": "ring-chart",
+      "type": "registry:component",
+      "title": "Ring Chart",
+      "description": "A composable donut/ring chart with progress indicators",
+      "registryDependencies": ["utils"],
+      "dependencies": ["@visx/responsive", "@number-flow/react", "motion"],
+      "files": [
+        {
+          "path": "src/charts/ring-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/ring-chart.tsx"
+        },
+        {
+          "path": "src/charts/ring-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/ring-context.tsx"
+        },
+        {
+          "path": "src/charts/ring.tsx",
+          "type": "registry:component",
+          "target": "components/charts/ring.tsx"
+        },
+        {
+          "path": "src/charts/ring-center.tsx",
+          "type": "registry:component",
+          "target": "components/charts/ring-center.tsx"
+        }
+      ]
+    },
+    {
+      "name": "choropleth-chart",
+      "type": "registry:component",
+      "title": "Choropleth Map",
+      "description": "A geographic map chart with zoom, pan, and data visualization",
+      "registryDependencies": ["utils"],
+      "dependencies": [
+        "@visx/geo",
+        "@visx/responsive",
+        "@visx/zoom",
+        "d3-geo",
+        "topojson-client",
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "src/charts/choropleth/choropleth-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/choropleth/choropleth-chart.tsx"
+        },
+        {
+          "path": "src/charts/choropleth/choropleth-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/choropleth/choropleth-context.tsx"
+        },
+        {
+          "path": "src/charts/choropleth/choropleth-feature.tsx",
+          "type": "registry:component",
+          "target": "components/charts/choropleth/choropleth-feature.tsx"
+        },
+        {
+          "path": "src/charts/choropleth/choropleth-graticule.tsx",
+          "type": "registry:component",
+          "target": "components/charts/choropleth/choropleth-graticule.tsx"
+        },
+        {
+          "path": "src/charts/choropleth/choropleth-tooltip.tsx",
+          "type": "registry:component",
+          "target": "components/charts/choropleth/choropleth-tooltip.tsx"
+        },
+        {
+          "path": "src/charts/choropleth/index.ts",
+          "type": "registry:component",
+          "target": "components/charts/choropleth/index.ts"
+        }
+      ]
+    },
+    {
+      "name": "sankey-chart",
+      "type": "registry:component",
+      "title": "Sankey Diagram",
+      "description": "A flow diagram for visualizing data transfers between nodes",
+      "registryDependencies": ["utils"],
+      "dependencies": [
+        "@visx/gradient",
+        "@visx/pattern",
+        "@visx/responsive",
+        "@visx/sankey",
+        "motion"
+      ],
+      "files": [
+        {
+          "path": "src/charts/sankey/sankey-chart.tsx",
+          "type": "registry:component",
+          "target": "components/charts/sankey/sankey-chart.tsx"
+        },
+        {
+          "path": "src/charts/sankey/sankey-context.tsx",
+          "type": "registry:component",
+          "target": "components/charts/sankey/sankey-context.tsx"
+        },
+        {
+          "path": "src/charts/sankey/sankey-node.tsx",
+          "type": "registry:component",
+          "target": "components/charts/sankey/sankey-node.tsx"
+        },
+        {
+          "path": "src/charts/sankey/sankey-link.tsx",
+          "type": "registry:component",
+          "target": "components/charts/sankey/sankey-link.tsx"
+        },
+        {
+          "path": "src/charts/sankey/sankey-tooltip.tsx",
+          "type": "registry:component",
+          "target": "components/charts/sankey/sankey-tooltip.tsx"
+        },
+        {
+          "path": "src/charts/sankey/index.ts",
+          "type": "registry:component",
+          "target": "components/charts/sankey/index.ts"
+        }
+      ]
+    }
+  ]
+}
