@@ -171,11 +171,13 @@ export function TooltipCustomContentDemo() {
           content={({ point }) => (
             <div className="flex flex-col gap-2 p-3">
               <div className="font-medium text-sm">
-                {(point.date as Date).toLocaleDateString("en-US", {
-                  weekday: "short",
-                  month: "short",
-                  day: "numeric",
-                })}
+                {point.date instanceof Date
+                  ? point.date.toLocaleDateString("en-US", {
+                      weekday: "short",
+                      month: "short",
+                      day: "numeric",
+                    })
+                  : "—"}
               </div>
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
                 <span className="text-zinc-400">Users</span>
